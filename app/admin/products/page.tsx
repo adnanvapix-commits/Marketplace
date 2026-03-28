@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import ProductsTable from "./ProductsTable";
-import type { AdminProduct } from "@/lib/services/adminService";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type RawProduct = Record<string, any>;
 
 export default async function AdminProductsPage() {
   const supabase = await createClient();
@@ -15,11 +17,19 @@ export default async function AdminProductsPage() {
 
   if (error) console.error("[admin/products] fetch error:", error.message);
 
-  // Supabase returns joined rows as array — normalize users to object
-  const products: AdminProduct[] = (data ?? []).map((p) => ({
-    ...p,
-    users: Array.isArray(p.users) ? (p.users[0] ?? null) : p.users,
-  })) as AdminProduct[];
+  // Normalize Supabase join: users comes back as array, flatten to object
+  const products = (data ?? []).map((p: RawProduct) => ({
+    id: p.id,
+    title: p.title,
+    price: p.price,
+    category: p.category,
+    is_blocked: p.is_blocked,
+    created_at: p.created_at,
+    user_id: p.user_id,
+    users: Array.isArray(p.users)
+      ? (p.users[0] ? { email: p.users[0].email as string } : null)
+      : p.users as { email: string } | null,
+  }));
 
   return (
     <div className="p-4 sm:p-6 md:p-8 pt-16 md:pt-8">
