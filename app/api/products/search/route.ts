@@ -67,8 +67,14 @@ export async function GET(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  // Normalize users array to object (Supabase join returns array)
+  const products = (data ?? []).map((p: Record<string, unknown>) => ({
+    ...p,
+    users: Array.isArray(p.users) ? p.users[0] ?? null : p.users,
+  }));
+
   return NextResponse.json({
-    products: data ?? [],
+    products,
     count: count ?? 0,
     totalPages: Math.ceil((count ?? 0) / PAGE_SIZE),
     page,

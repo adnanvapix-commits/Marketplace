@@ -13,6 +13,12 @@ export default async function AdminProductsPage() {
     .select("id, title, price, category, is_blocked, created_at, user_id, users(email)")
     .order("created_at", { ascending: false });
 
+  // Supabase returns users as array — normalize to object
+  const normalized = (products ?? []).map((p: Record<string, unknown>) => ({
+    ...p,
+    users: Array.isArray(p.users) ? p.users[0] ?? null : p.users,
+  }));
+
   if (error) console.error("[admin/products] fetch error:", error.message);
 
   return (
@@ -27,7 +33,7 @@ export default async function AdminProductsPage() {
           Failed to load products: {error.message}
         </div>
       ) : (
-        <ProductsTable initialProducts={products ?? []} adminId={user?.id ?? ""} />
+        <ProductsTable initialProducts={normalized as import("@/lib/services/adminService").AdminProduct[]} adminId={user?.id ?? ""} />
       )}
     </div>
   );
