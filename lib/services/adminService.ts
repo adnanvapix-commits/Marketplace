@@ -113,7 +113,12 @@ export async function fetchAdminProducts(search = ""): Promise<AdminProduct[]> {
   if (search.trim()) q = q.ilike("title", `%${search.trim()}%`);
   const { data, error } = await q;
   if (error) throw new Error(error.message);
-  return (data as AdminProduct[]) ?? [];
+  // Normalize users join (Supabase returns array, we need object)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (data ?? []).map((p: any) => ({
+    ...p,
+    users: Array.isArray(p.users) ? (p.users[0] ?? null) : p.users,
+  })) as AdminProduct[];
 }
 
 export async function deleteAdminProduct(productId: string, adminId: string): Promise<void> {
