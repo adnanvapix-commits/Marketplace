@@ -18,6 +18,9 @@ export default function Navbar() {
   const role = useAuthStore((s) => s.role);
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
   const isAdmin = role === "admin" || (!!user?.email && user.email === adminEmail);
+
+  // Hide navbar on admin pages — admin has its own sidebar
+  if (pathname.startsWith("/admin")) return null;
   const [open, setOpen] = useState(false);
 
   const active = (path: string) =>
@@ -72,7 +75,7 @@ export default function Navbar() {
 
               <Link href={isAdmin ? "/admin" : "/dashboard"} className={linkCls(isAdmin ? "/admin" : "/dashboard")}>
                 <User size={16} className="shrink-0" />
-                {isAdmin ? "Admin Panel" : "Dashboard"}
+                {isAdmin ? "Admin Dashboard" : "Dashboard"}
               </Link>
 
               <Link href="/profile" className={linkCls("/profile")}>
@@ -127,7 +130,7 @@ export default function Navbar() {
                 <MobileLink href="/sell" icon={<PlusCircle size={18} />} label="Sell" active={pathname === "/sell"} onClick={() => setOpen(false)} />
                 <MobileLink href="/chat" icon={<MessageCircle size={18} />} label="Chat" active={pathname === "/chat"} onClick={() => setOpen(false)} />
                 <MobileLink href="/wishlist" icon={<Heart size={18} />} label="Wishlist" active={pathname === "/wishlist"} onClick={() => setOpen(false)} />
-                <MobileLink href={isAdmin ? "/admin" : "/dashboard"} icon={<User size={18} />} label={isAdmin ? "Admin Panel" : "Dashboard"} active={pathname === (isAdmin ? "/admin" : "/dashboard")} onClick={() => setOpen(false)} />
+                <MobileLink href={isAdmin ? "/admin" : "/dashboard"} icon={<User size={18} />} label={isAdmin ? "Admin Dashboard" : "Dashboard"} active={pathname === (isAdmin ? "/admin" : "/dashboard")} onClick={() => setOpen(false)} />
                 <MobileLink href="/profile" icon={<User size={18} />} label="Profile" active={pathname === "/profile"} onClick={() => setOpen(false)} />
 
                 <div className="border-t border-gray-100 my-2" />
