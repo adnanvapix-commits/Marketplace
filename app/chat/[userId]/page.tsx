@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import ChatWindow from "./ChatWindow";
-import { fetchMessages } from "@/lib/services/chatService";
 
 export default async function ChatPage({
   params,
@@ -18,17 +17,26 @@ export default async function ChatPage({
 
   if (!user) redirect("/login");
 
-  // Load initial messages
+  // Load initial messages using server client (has session)
   let initialMessages: import("@/types").Message[] = [];
-  try {
-    initialMessages = productId
-      ? await fetchMessages(user.id, userId, productId)
-      : [];
-  } catch {
-    initialMessages = [];
+  if (productId) {
+    try {
+      const { data } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("product_id", productId)
+        .or(
+          `and(sender_id.eq.${user.id},receiver_id.eq.${userId}),` +
+          `and(sender_id.eq.${userId},receiver_id.eq.${user.id})`
+        )
+        .order("created_at", { ascending: true });
+      initialMessages = data ?? [];
+    } catch {
+      initialMessages = [];
+    }
   }
 
-  // Get product title for header
+  // Get product title
   const { data: product } = productId
     ? await supabase.from("products").select("title").eq("id", productId).single()
     : { data: null };
