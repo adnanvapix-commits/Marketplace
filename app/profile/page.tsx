@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { PlusCircle, Pencil } from "lucide-react";
+import { PlusCircle, User, Pencil } from "lucide-react";
 import DeleteProductButton from "./DeleteProductButton";
 import type { Product } from "@/types";
 
@@ -12,14 +12,11 @@ export default async function ProfilePage() {
   if (!user) redirect("/login");
 
   const { data: profile } = await supabase
-    .from("users")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+    .from("users").select("*").eq("id", user.id).single();
 
   const { data: products } = await supabase
     .from("products")
-    .select("id, title, price, condition, quantity, minimum_order_quantity, image_url, category")
+    .select("id, title, price, condition, quantity, minimum_order_quantity, category")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -32,16 +29,12 @@ export default async function ProfilePage() {
       <div className="card p-5 sm:p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           {/* Avatar */}
-          <div className="relative shrink-0">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
             {profile?.avatar_url ? (
-              <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-primary/20">
-                <Image src={profile.avatar_url} alt="Avatar" width={80} height={80}
-                  className="object-cover w-full h-full" />
-              </div>
+              <Image src={profile.avatar_url} alt="Avatar" width={64} height={64}
+                className="rounded-full object-cover w-full h-full" />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-primary text-3xl font-bold">
-                {(profile?.full_name || user.email)?.[0]?.toUpperCase()}
-              </div>
+              <User size={28} />
             )}
           </div>
 
@@ -51,7 +44,7 @@ export default async function ProfilePage() {
               {profile?.full_name || profile?.company_name || user.email?.split("@")[0]}
             </h1>
             <p className="text-sm text-gray-400 truncate">{user.email}</p>
-            {profile?.company_name && (
+            {profile?.company_name && profile?.full_name && (
               <p className="text-sm text-gray-600 mt-0.5">{profile.company_name}</p>
             )}
             <div className="flex flex-wrap gap-1.5 mt-2">
@@ -60,17 +53,22 @@ export default async function ProfilePage() {
                   {r}
                 </span>
               ))}
+              {profile?.is_verified && (
+                <span className="text-xs px-2.5 py-1 rounded-full bg-green-100 text-green-700 font-medium">✓ Verified</span>
+              )}
+              {profile?.is_subscribed && (
+                <span className="text-xs px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 font-medium">✓ Subscribed</span>
+              )}
             </div>
           </div>
 
-          {/* Edit button */}
           <Link href="/profile/edit"
             className="btn-outline text-sm flex items-center gap-1.5 shrink-0 self-start sm:self-center">
             <Pencil size={14} /> Edit Profile
           </Link>
         </div>
 
-        {/* Details grid */}
+        {/* Details */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5 pt-5 border-t border-gray-100">
           {[
             { label: "Phone", value: profile?.phone },
@@ -104,28 +102,29 @@ export default async function ProfilePage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {(products as Product[]).map((p) => (
-              <div key={p.id} className="card overflow-hidden">
-                <div className="relative aspect-video bg-gray-100">
-                  <Image src={p.image_url} alt={p.title} fill className="object-cover"
-                    sizes="(max-width: 640px) 100vw, 33vw" />
-                  <span className={`absolute top-2 left-2 text-xs px-2 py-0.5 rounded-full font-medium capitalize ${
-                    p.condition === "new" ? "bg-green-100 text-green-700" :
-                    p.condition === "used" ? "bg-yellow-100 text-yellow-700" :
-                    "bg-blue-100 text-blue-700"}`}>
-                    {p.condition}
-                  </span>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-800 truncate text-sm">{p.title}</h3>
-                  <p className="text-primary font-bold mt-0.5">${p.price.toLocaleString()}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Qty: {p.quantity} · MOQ: {p.minimum_order_quantity}</p>
-                  <div className="flex gap-2 mt-3">
-                    <Link href={`/product/${p.id}/edit`}
-                      className="flex-1 text-center text-sm py-2 rounded-lg border border-primary text-primary hover:bg-primary hover:text-white transition-colors font-medium">
-                      Edit
-                    </Link>
-                    <DeleteProductButton productId={p.id} />
+              <div key={p.id} className="card p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-gray-800 truncate text-sm">{p.title}</h3>
+                    <p className="text-primary font-bold mt-0.5">${p.price.toLocaleString()}</p>
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${
+                        p.condition === "new" ? "bg-green-100 text-green-700" :
+                        p.condition === "used" ? "bg-yellow-100 text-yellow-700" :
+                        "bg-blue-100 text-blue-700"}`}>
+                        {p.condition}
+                      </span>
+                      <span className="text-xs text-gray-400">{p.category}</span>
+                      <span className="text-xs text-gray-400">Qty: {p.quantity}</span>
+                    </div>
                   </div>
+                </div>
+                <div className="flex gap-2 mt-3">
+                  <Link href={`/product/${p.id}/edit`}
+                    className="flex-1 text-center text-sm py-2 rounded-lg border border-primary text-primary hover:bg-primary hover:text-white transition-colors font-medium">
+                    Edit
+                  </Link>
+                  <DeleteProductButton productId={p.id} />
                 </div>
               </div>
             ))}
