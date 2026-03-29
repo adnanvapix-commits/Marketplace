@@ -72,6 +72,11 @@ export default function Navbar() {
                 Profile
               </Link>
 
+              <Link href="/account" className={linkCls("/account")}>
+                <User size={16} className="shrink-0" />
+                Account
+              </Link>
+
               {/* divider */}
               <span className="w-px h-5 bg-gray-200 mx-2" />
 
