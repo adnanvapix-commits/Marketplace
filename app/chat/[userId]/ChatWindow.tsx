@@ -88,9 +88,10 @@ export default function ChatWindow({
         created_at: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, optimistic]);
-    } catch {
-      toast.error("Failed to send message");
-      setText(msg); // restore on failure
+    } catch (err) {
+      console.error("Send message error:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to send message");
+      setText(msg);
     } finally {
       setSending(false);
     }
