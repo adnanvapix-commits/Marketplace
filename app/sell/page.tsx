@@ -18,7 +18,7 @@ export default function SellPage() {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState("Dubai, UAE");
   const [brand, setBrand] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [moq, setMoq] = useState("1");
@@ -109,15 +109,14 @@ export default function SellPage() {
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">Product Title <span className="text-red-400">*</span></label>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
-              className="input min-h-[44px]" placeholder="e.g. Samsung Galaxy S24 Ultra" required maxLength={100} />
+              className="input min-h-[44px]" required maxLength={100} />
           </div>
 
           {/* Description */}
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">Description <span className="text-red-400">*</span></label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)}
-              className="input resize-none" rows={4}
-              placeholder="Detailed product description, specifications, terms..." required />
+              className="input resize-none" rows={4} required />
           </div>
 
           {/* Brand + Category */}
@@ -125,7 +124,7 @@ export default function SellPage() {
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-1">Brand</label>
               <input type="text" value={brand} onChange={(e) => setBrand(e.target.value)}
-                className="input min-h-[44px]" placeholder="e.g. Samsung, Apple" />
+                className="input min-h-[44px]" />
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-1">Category <span className="text-red-400">*</span></label>
@@ -161,12 +160,12 @@ export default function SellPage() {
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-1">Available Qty <span className="text-red-400">*</span></label>
               <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)}
-                className="input min-h-[44px]" placeholder="100" min={1} required />
+                className="input min-h-[44px]" min={1} required />
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-1">Min. Order Qty</label>
               <input type="number" value={moq} onChange={(e) => setMoq(e.target.value)}
-                className="input min-h-[44px]" placeholder="10" min={1} />
+                className="input min-h-[44px]" min={1} />
             </div>
           </div>
 
