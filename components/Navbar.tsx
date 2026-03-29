@@ -17,7 +17,7 @@ export default function Navbar() {
   const user = useAuthStore((s) => s.user);
   const role = useAuthStore((s) => s.role);
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
-  const isAdmin = role === "admin" || user?.email === adminEmail;
+  const isAdmin = role === "admin" || (!!user?.email && user.email === adminEmail);
   const [open, setOpen] = useState(false);
 
   const active = (path: string) =>
