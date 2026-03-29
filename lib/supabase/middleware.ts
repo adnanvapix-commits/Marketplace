@@ -2,7 +2,6 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
-  // If Supabase URL is not configured, skip middleware entirely
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -31,25 +30,27 @@ export async function updateSession(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     const path = request.nextUrl.pathname;
 
-    // Routes that require login
-    const authRequired = ["/sell", "/chat", "/profile", "/dashboard", "/buy", "/product"];
-    const needsAuth = authRequired.some((p) => path.startsWith(p));
+    // Skip admin routes — handled by admin layout
+    if (path.startsWith("/admin")) return supabaseResponse;
 
-    if (needsAuth && !user) {
+    // Routes that require login only (no verification check)
+    const loginRequired = ["/sell", "/chat", "/profile", "/dashboard"];
+    const needsLogin = loginRequired.some((p) => path.startsWith(p));
+
+    if (needsLogin && !user) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       return NextResponse.redirect(url);
     }
 
-    // Routes that require verified + subscribed (skip admin)
-    const restrictedPaths = ["/buy", "/product", "/chat", "/sell", "/dashboard"];
-    const isRestricted = restrictedPaths.some((p) => path.startsWith(p));
-    const isAdminPath = path.startsWith("/admin");
+    // /sell and /dashboard also require verified + subscribed
+    const strictPaths = ["/sell", "/dashboard"];
+    const isStrict = strictPaths.some((p) => path.startsWith(p));
 
-    if (isRestricted && user && !isAdminPath) {
+    if (isStrict && user) {
       const { data: profile } = await supabase
         .from("users")
-        .select("is_verified, is_subscribed, role, verification_status")
+        .select("is_verified, is_subscribed, role")
         .eq("id", user.id)
         .single();
 
@@ -57,22 +58,29 @@ export async function updateSession(request: NextRequest) {
 
       if (!profile?.is_verified) {
         const url = request.nextUrl.clone();
-        if (path !== "/pending") {
-          url.pathname = "/pending";
-          return NextResponse.redirect(url);
-        }
+        url.pathname = "/pending";
+        return NextResponse.redirect(url);
       }
 
-      if (profile?.is_verified && !profile?.is_subscribed) {
+      if (!profile?.is_subscribed) {
         const url = request.nextUrl.clone();
-        if (path !== "/subscribe") {
-          url.pathname = "/subscribe";
-          return NextResponse.redirect(url);
-        }
+        url.pathname = "/subscribe";
+        return NextResponse.redirect(url);
       }
     }
+
+    // /buy and /product — require login, but NOT verification
+    // (the search API handles access control for actual data)
+    const buyPaths = ["/buy", "/product"];
+    const isBuyPath = buyPaths.some((p) => path.startsWith(p));
+
+    if (isBuyPath && !user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      return NextResponse.redirect(url);
+    }
+
   } catch {
-    // If anything fails, just continue — don't crash
     return supabaseResponse;
   }
 
