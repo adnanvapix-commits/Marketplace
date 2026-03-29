@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { ShoppingBag, PlusCircle, MessageCircle, User, LogOut, Menu, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/store/authStore";
@@ -10,7 +10,6 @@ import toast from "react-hot-toast";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const role = useAuthStore((s) => s.role);
   const setUser = useAuthStore((s) => s.setUser);
@@ -30,18 +29,13 @@ export default function Navbar() {
     `flex items-center gap-1.5 text-sm font-medium whitespace-nowrap transition-colors ${active(path)}`;
 
   async function handleLogout() {
-    try {
-      const supabase = createClient();
-      await supabase.auth.signOut();
-      setUser(null);
-      setRole(null);
-      setOpen(false);
-      toast.success("Logged out");
-      router.push("/");
-      router.refresh();
-    } catch {
-      toast.error("Logout failed");
-    }
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setUser(null);
+    setRole(null);
+    setOpen(false);
+    toast.success("Logged out");
+    window.location.href = "/";
   }
 
   return (
