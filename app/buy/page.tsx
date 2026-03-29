@@ -162,10 +162,23 @@ function BuyPageInner() {
             </div>
           )}
 
-          {/* Error */}
-          {error && !loading && (
-            <div className="card p-6 text-center text-red-500 text-sm">{error}</div>
+      {/* Error */}
+      {error && !loading && (
+        <div className="card p-6 text-center">
+          <p className="text-red-500 text-sm font-medium">{error}</p>
+          {error.includes("Access denied") && (
+            <p className="text-gray-400 text-xs mt-2">
+              Your account needs to be verified and subscribed to view listings.
+              Contact admin or go to <a href="/subscribe" className="text-primary underline">Subscribe</a>.
+            </p>
           )}
+          {error.includes("Unauthorized") && (
+            <p className="text-gray-400 text-xs mt-2">
+              Please <a href="/login" className="text-primary underline">login</a> to view listings.
+            </p>
+          )}
+        </div>
+      )}
 
           {/* Results */}
           {!loading && searched && !error && (
