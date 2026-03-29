@@ -56,15 +56,23 @@ export default function LoginPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+
+        // Small delay to ensure session cookie is set
+        await new Promise((r) => setTimeout(r, 300));
+
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const { data: profile } = await supabase
             .from("users").select("is_verified, is_subscribed, role").eq("id", user.id).single();
-          if (profile?.role === "admin" || user.email === adminEmail) router.push("/admin");
-          else if (!profile?.is_verified) router.push("/pending");
-          else if (!profile?.is_subscribed) router.push("/subscribe");
-          else router.push("/dashboard");
-          router.refresh();
+          if (profile?.role === "admin" || user.email === adminEmail) {
+            window.location.href = "/admin";
+          } else if (!profile?.is_verified) {
+            window.location.href = "/pending";
+          } else if (!profile?.is_subscribed) {
+            window.location.href = "/subscribe";
+          } else {
+            window.location.href = "/dashboard";
+          }
         }
       }
     } catch (err: unknown) {
