@@ -16,12 +16,14 @@ export default function Navbar() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const role = useAuthStore((s) => s.role);
-  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
-  const isAdmin = role === "admin" || (!!user?.email && user.email === adminEmail);
+  const [open, setOpen] = useState(false);
+
+  // Admin check — use email directly (available immediately, no async needed)
+  const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@gmail.com";
+  const isAdmin = role === "admin" || user?.email === ADMIN_EMAIL;
 
   // Hide navbar on admin pages — admin has its own sidebar
   if (pathname.startsWith("/admin")) return null;
-  const [open, setOpen] = useState(false);
 
   const active = (path: string) =>
     pathname === path

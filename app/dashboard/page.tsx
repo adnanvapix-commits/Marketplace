@@ -16,7 +16,7 @@ export default async function DashboardPage() {
   // Redirect admin to admin panel
   const { data: profile } = await supabase
     .from("users").select("role").eq("id", user.id).single();
-  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
+  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@gmail.com";
   if (profile?.role === "admin" || user.email === adminEmail) {
     redirect("/admin");
   }
