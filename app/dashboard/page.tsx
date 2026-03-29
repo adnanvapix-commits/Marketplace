@@ -13,6 +13,14 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Redirect admin to admin panel
+  const { data: profile } = await supabase
+    .from("users").select("role").eq("id", user.id).single();
+  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
+  if (profile?.role === "admin" || user.email === adminEmail) {
+    redirect("/admin");
+  }
+
   const [profileRes, productsRes, chatsRes] = await Promise.all([
     supabase.from("users").select("*").eq("id", user.id).single(),
     supabase.from("products").select("*").eq("user_id", user.id)

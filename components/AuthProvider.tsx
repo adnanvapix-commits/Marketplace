@@ -4,23 +4,42 @@ import { useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/store/authStore";
 
-// Syncs Supabase auth state into Zustand store
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const setUser = useAuthStore((s) => s.setUser);
+  const setRole = useAuthStore((s) => s.setRole);
 
   useEffect(() => {
     const supabase = createClient();
 
-    // Get initial session
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    async function loadUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      if (user) {
+        const { data } = await supabase
+          .from("users").select("role").eq("id", user.id).single();
+        setRole(data?.role ?? null);
+      } else {
+        setRole(null);
+      }
+    }
 
-    // Listen for auth changes
+    loadUser();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => setUser(session?.user ?? null)
+      async (_event, session) => {
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          const { data } = await supabase
+            .from("users").select("role").eq("id", session.user.id).single();
+          setRole(data?.role ?? null);
+        } else {
+          setRole(null);
+        }
+      }
     );
 
     return () => subscription.unsubscribe();
-  }, [setUser]);
+  }, [setUser, setRole]);
 
   return <>{children}</>;
 }
