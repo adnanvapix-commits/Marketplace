@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Package, Tag } from "lucide-react";
@@ -11,7 +12,7 @@ const conditionColor = {
   refurbished: "bg-blue-100 text-blue-700",
 };
 
-export default function ProductCard({ product }: { product: Product }) {
+const ProductCard = memo(function ProductCard({ product }: { product: Product }) {
   return (
     <Link href={`/product/${product.id}`} className="card group hover:shadow-md transition-shadow flex flex-col">
       {/* Image */}
@@ -20,6 +21,7 @@ export default function ProductCard({ product }: { product: Product }) {
           src={product.image_url || "/placeholder.png"}
           alt={product.title}
           fill
+          loading="lazy"
           className="object-cover group-hover:scale-105 transition-transform duration-300"
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
         />
@@ -68,4 +70,6 @@ export default function ProductCard({ product }: { product: Product }) {
       </div>
     </Link>
   );
-}
+});
+
+export default ProductCard;

@@ -73,10 +73,8 @@ export async function GET(req: NextRequest) {
     users: Array.isArray(p.users) ? p.users[0] ?? null : p.users,
   }));
 
-  return NextResponse.json({
-    products,
-    count: count ?? 0,
-    totalPages: Math.ceil((count ?? 0) / PAGE_SIZE),
-    page,
-  });
+  return NextResponse.json(
+    { products, count: count ?? 0, totalPages: Math.ceil((count ?? 0) / PAGE_SIZE), page },
+    { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" } }
+  );
 }

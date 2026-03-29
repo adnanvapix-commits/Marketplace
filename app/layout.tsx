@@ -5,11 +5,15 @@ import Navbar from "@/components/Navbar";
 import AuthProvider from "@/components/AuthProvider";
 import { Toaster } from "react-hot-toast";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",      // prevent FOIT
+  preload: true,
+});
 
 export const metadata: Metadata = {
-  title: "MarketPlace — Buy & Sell Anything",
-  description: "Find great deals or sell your items locally",
+  title: "B2B Market — Trade Smarter",
+  description: "Verified B2B marketplace for buyers and sellers worldwide",
 };
 
 export default function RootLayout({
