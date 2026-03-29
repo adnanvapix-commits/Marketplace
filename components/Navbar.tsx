@@ -67,9 +67,9 @@ export default function Navbar() {
                 Wishlist
               </Link>
 
-              <Link href="/dashboard" className={linkCls("/dashboard")}>
+              <Link href="/profile" className={linkCls("/profile")}>
                 <User size={16} className="shrink-0" />
-                Dashboard
+                Profile
               </Link>
 
               {/* divider */}
@@ -114,7 +114,7 @@ export default function Navbar() {
                 <MobileLink href="/sell" icon={<PlusCircle size={18} />} label="Sell" active={pathname === "/sell"} onClick={() => setOpen(false)} />
                 <MobileLink href="/chat" icon={<MessageCircle size={18} />} label="Chat" active={pathname === "/chat"} onClick={() => setOpen(false)} />
                 <MobileLink href="/wishlist" icon={<Heart size={18} />} label="Wishlist" active={pathname === "/wishlist"} onClick={() => setOpen(false)} />
-                <MobileLink href="/dashboard" icon={<User size={18} />} label="Dashboard" active={pathname === "/dashboard"} onClick={() => setOpen(false)} />
+                <MobileLink href="/profile" icon={<User size={18} />} label="Profile" active={pathname === "/profile"} onClick={() => setOpen(false)} />
 
                 <div className="border-t border-gray-100 my-2" />
 
