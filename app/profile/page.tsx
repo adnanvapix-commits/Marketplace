@@ -19,7 +19,7 @@ export default async function ProfilePage() {
 
   const { data: products } = await supabase
     .from("products")
-    .select("*")
+    .select("id, title, price, condition, quantity, minimum_order_quantity, image_url, category")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
