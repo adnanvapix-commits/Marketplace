@@ -37,7 +37,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Categories — 3 cols on mobile, 6 on desktop */}
+      {/* Categories */}
       <section className="max-w-6xl mx-auto px-4 py-8 sm:py-12">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base sm:text-lg font-bold text-gray-800">Browse by Category</h2>
@@ -45,11 +45,12 @@ export default function HomePage() {
             View all <ArrowRight size={13} />
           </Link>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3">
-          {CATEGORIES.slice(0, 12).map((cat) => (
+        <div className="flex flex-wrap gap-3">
+          {CATEGORIES.map((cat) => (
             <Link key={cat} href={`/buy?category=${encodeURIComponent(cat)}`}
-              className="card p-2.5 sm:p-3 text-center hover:shadow-md hover:border-primary/30 active:scale-95 transition-all group">
-              <p className="text-xs font-medium text-gray-700 group-hover:text-primary transition-colors leading-tight">
+              className="card px-5 py-3 hover:shadow-md hover:border-primary/40 active:scale-95 transition-all group flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+              <p className="text-sm font-semibold text-gray-700 group-hover:text-primary transition-colors">
                 {cat}
               </p>
             </Link>

@@ -42,18 +42,7 @@ export interface Message {
 }
 
 export const CATEGORIES = [
-  "Smartphones",
-  "Laptops & Computers",
-  "Tablets",
-  "Accessories",
-  "Audio & Headphones",
-  "Cameras",
-  "Networking & WiFi",
-  "Gaming",
-  "Wearables",
-  "TV & Displays",
-  "Components & Parts",
-  "Refurbished",
+  "Electronics",
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];

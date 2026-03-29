@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, User, Eye, EyeOff } from "lucide-react";
+import { Building2, Eye, EyeOff, ShoppingBag, Store, CheckSquare, Square } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
+
+const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,14 +14,33 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
-  const [role, setRole] = useState<"buyer" | "seller">("buyer");
+
+  // Multi-select roles
+  const [roles, setRoles] = useState<Set<"buyer" | "seller">>(new Set());
+  const [roleError, setRoleError] = useState("");
+
   const [companyName, setCompanyName] = useState("");
   const [phone, setPhone] = useState("");
   const [country, setCountry] = useState("");
   const [loading, setLoading] = useState(false);
 
+  function toggleRole(r: "buyer" | "seller") {
+    setRoleError("");
+    setRoles((prev) => {
+      const next = new Set(prev);
+      if (next.has(r)) next.delete(r); else next.add(r);
+      return next;
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (isSignup && roles.size === 0) {
+      setRoleError("Please select at least one option (Buy or Sell).");
+      return;
+    }
+
     setLoading(true);
     const supabase = createClient();
 
@@ -28,12 +49,14 @@ export default function LoginPage() {
         const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
 
-        // Update profile with B2B fields
         if (data.user) {
+          // Primary role: if both selected use "seller", else use selected
+          const primaryRole = roles.has("seller") ? "seller" : "buyer";
           await supabase.from("users").upsert({
             id: data.user.id,
             email,
-            role,
+            role: primaryRole,
+            roles: Array.from(roles), // store both roles
             company_name: companyName,
             phone,
             country,
@@ -48,7 +71,6 @@ export default function LoginPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
 
-        // Check verification status
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const { data: profile } = await supabase
@@ -80,9 +102,9 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-3">
-            <Building2 size={28} className="text-primary" />
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center gap-2 mb-2">
+            <Building2 size={26} className="text-primary" />
             <span className="text-2xl font-bold text-gray-900">B2B Market</span>
           </div>
           <p className="text-gray-500 text-sm">
@@ -90,33 +112,85 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="card p-6 sm:p-8">
+        <div className="card p-5 sm:p-7">
           <form onSubmit={handleSubmit} className="space-y-4">
 
-            {/* Role selector — signup only */}
+            {/* Role checkboxes — signup only */}
             {isSignup && (
               <div>
-                <label className="text-sm font-medium text-gray-700 block mb-2">I want to</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {(["buyer", "seller"] as const).map((r) => (
-                    <button
-                      key={r}
-                      type="button"
-                      onClick={() => setRole(r)}
-                      className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 text-sm font-semibold transition-all ${
-                        role === r
-                          ? "border-primary bg-primary/5 text-primary"
-                          : "border-gray-200 text-gray-500 hover:border-gray-300"
-                      }`}
-                    >
-                      <User size={16} />
-                      {r === "buyer" ? "Buy Products" : "Sell Products"}
-                    </button>
-                  ))}
+                <label className="text-sm font-medium text-gray-700 block mb-2">
+                  I want to <span className="text-red-400">*</span>
+                </label>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {/* Buy */}
+                  <button
+                    type="button"
+                    onClick={() => toggleRole("buyer")}
+                    className={`flex-1 flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                      roles.has("buyer")
+                        ? "border-primary bg-primary/5"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <span className="shrink-0 text-primary">
+                      {roles.has("buyer")
+                        ? <CheckSquare size={20} />
+                        : <Square size={20} className="text-gray-300" />
+                      }
+                    </span>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <ShoppingBag size={14} className="text-primary" />
+                        <span className={`text-sm font-semibold ${roles.has("buyer") ? "text-primary" : "text-gray-700"}`}>
+                          Buy Products
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-0.5">Browse & purchase listings</p>
+                    </div>
+                  </button>
+
+                  {/* Sell */}
+                  <button
+                    type="button"
+                    onClick={() => toggleRole("seller")}
+                    className={`flex-1 flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                      roles.has("seller")
+                        ? "border-primary bg-primary/5"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <span className="shrink-0 text-primary">
+                      {roles.has("seller")
+                        ? <CheckSquare size={20} />
+                        : <Square size={20} className="text-gray-300" />
+                      }
+                    </span>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <Store size={14} className="text-primary" />
+                        <span className={`text-sm font-semibold ${roles.has("seller") ? "text-primary" : "text-gray-700"}`}>
+                          Sell Products
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-0.5">List & sell your inventory</p>
+                    </div>
+                  </button>
                 </div>
+
+                {/* Helper text */}
+                <p className="text-xs text-gray-400 mt-2">
+                  You can choose both if you want to buy and sell products.
+                </p>
+
+                {/* Validation error */}
+                {roleError && (
+                  <p className="text-xs text-red-500 mt-1 font-medium">{roleError}</p>
+                )}
               </div>
             )}
 
+            {/* Email */}
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-1">Email</label>
               <input
@@ -125,6 +199,7 @@ export default function LoginPage() {
               />
             </div>
 
+            {/* Password */}
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-1">Password</label>
               <div className="relative">
@@ -135,7 +210,7 @@ export default function LoginPage() {
                   required minLength={6}
                 />
                 <button type="button" onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 p-1">
                   {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
@@ -174,7 +249,7 @@ export default function LoginPage() {
 
             <button
               type="submit" disabled={loading}
-              className="btn-primary w-full min-h-[48px] text-base mt-2"
+              className="btn-primary w-full min-h-[48px] text-base mt-1"
             >
               {loading ? "Please wait..." : isSignup ? "Create Account" : "Sign In"}
             </button>
@@ -182,7 +257,8 @@ export default function LoginPage() {
 
           <p className="text-center text-sm text-gray-500 mt-5">
             {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
-            <button onClick={() => setIsSignup(!isSignup)} className="text-primary hover:underline font-medium">
+            <button onClick={() => { setIsSignup(!isSignup); setRoles(new Set()); setRoleError(""); }}
+              className="text-primary hover:underline font-medium">
               {isSignup ? "Sign In" : "Register"}
             </button>
           </p>
