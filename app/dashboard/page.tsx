@@ -13,11 +13,12 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Redirect admin to admin panel
+  // Redirect admin to admin panel — check both role and email
   const { data: profile } = await supabase
     .from("users").select("role").eq("id", user.id).single();
-  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@gmail.com";
-  if (profile?.role === "admin" || user.email === adminEmail) {
+  const adminEmail = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@gmail.com").toLowerCase();
+  const userEmail = (user.email || "").toLowerCase();
+  if (profileData?.role === "admin" || userEmail === adminEmail) {
     redirect("/admin");
   }
 
@@ -30,11 +31,11 @@ export default async function DashboardPage() {
       .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`),
   ]);
 
-  const profile = profileRes.data;
+  const profileData = profileRes.data;
   const products = (productsRes.data as Product[]) ?? [];
   const chatCount = chatsRes.count ?? 0;
-  const subExpiry = profile?.subscription_expiry ? new Date(profile.subscription_expiry) : null;
-  const subActive = profile?.is_subscribed && subExpiry && subExpiry > new Date();
+  const subExpiry = profileData?.subscription_expiry ? new Date(profile.subscription_expiry) : null;
+  const subActive = profileData?.is_subscribed && subExpiry && subExpiry > new Date();
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-5 sm:py-8">
@@ -46,7 +47,7 @@ export default async function DashboardPage() {
         </div>
         <div className="min-w-0">
           <h1 className="text-lg sm:text-xl font-bold text-gray-800 truncate">
-            {profile?.company_name || user.email?.split("@")[0]}
+            {profileData?.company_name || user.email?.split("@")[0]}
           </h1>
           <p className="text-xs text-gray-400 truncate">{user.email}</p>
         </div>
@@ -56,11 +57,11 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-2 gap-3 mb-6">
         <div className="card p-3 sm:p-4">
           <p className="text-xs text-gray-400 uppercase tracking-wide mb-1.5">Verification</p>
-          {profile?.is_verified ? (
+          {profileData?.is_verified ? (
             <span className="flex items-center gap-1 text-green-600 font-semibold text-xs sm:text-sm">
               <CheckCircle size={14} /> Verified
             </span>
-          ) : profile?.verification_status === "rejected" ? (
+          ) : profileData?.verification_status === "rejected" ? (
             <span className="flex items-center gap-1 text-red-500 font-semibold text-xs sm:text-sm">
               <XCircle size={14} /> Rejected
             </span>
