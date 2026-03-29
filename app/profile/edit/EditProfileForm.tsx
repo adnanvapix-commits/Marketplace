@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Upload, CheckSquare, Square, Loader2, CheckCircle } from "lucide-react";
+import { CheckSquare, Square, Loader2, CheckCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { uploadImage } from "@/lib/cloudinary";
 import toast from "react-hot-toast";
 
 interface Profile {
@@ -23,8 +22,6 @@ export default function EditProfileForm({ profile, email, userId }: { profile: P
   const [country, setCountry] = useState(profile?.country ?? "UAE");
   const [roles, setRoles] = useState<Set<string>>(new Set(existingRoles));
   const [roleError, setRoleError] = useState("");
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -50,15 +47,12 @@ export default function EditProfileForm({ profile, email, userId }: { profile: P
 
     setLoading(true);
     try {
-      let avatarUrl = profile?.avatar_url ?? null;
-      if (avatarFile) avatarUrl = await uploadImage(avatarFile);
       const supabase = createClient();
       const rolesArray = Array.from(roles);
       const { error } = await supabase.from("users").update({
         full_name: fullName.trim(), company_name: companyName.trim(),
         phone: phone.trim(), country: country.trim(),
         roles: rolesArray, role: rolesArray.includes("seller") ? "seller" : "buyer",
-        avatar_url: avatarUrl,
       }).eq("id", userId);
       if (error) throw error;
       setDone(true); toast.success("Profile updated!");
@@ -72,19 +66,13 @@ export default function EditProfileForm({ profile, email, userId }: { profile: P
 
   return (
     <form onSubmit={handleSubmit} className="card p-5 sm:p-7 space-y-5">
-      {/* Avatar */}
+      {/* Avatar — display only */}
       <div>
         <label className="text-sm font-medium text-gray-700 block mb-3">Profile Photo</label>
-        <div className="flex items-center gap-4">
-          <div className="w-20 h-20 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center shrink-0">
-            {currentAvatar
-              ? <Image src={currentAvatar} alt="Avatar" width={80} height={80} className="object-cover w-full h-full" />
-              : <span className="text-primary text-3xl font-bold">{(fullName || email)?.[0]?.toUpperCase()}</span>}
-          </div>
-          <label className="btn-outline text-sm flex items-center gap-2 cursor-pointer">
-            <Upload size={14} /> Change Photo
-            <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
-          </label>
+        <div className="w-20 h-20 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center">
+          {profile?.avatar_url
+            ? <Image src={profile.avatar_url} alt="Avatar" width={80} height={80} className="object-cover w-full h-full" />
+            : <span className="text-primary text-3xl font-bold">{(fullName || email)?.[0]?.toUpperCase()}</span>}
         </div>
       </div>
 

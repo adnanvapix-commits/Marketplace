@@ -15,21 +15,28 @@ const conditionColor = {
 const ProductCard = memo(function ProductCard({ product }: { product: Product }) {
   return (
     <Link href={`/product/${product.id}`} className="card group hover:shadow-md transition-shadow flex flex-col">
-      {/* Image */}
-      <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden shrink-0">
-        <Image
-          src={product.image_url || "/placeholder.png"}
-          alt={product.title}
-          fill
-          loading="lazy"
-          className="object-cover group-hover:scale-105 transition-transform duration-300"
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-        />
-        {/* Condition badge */}
-        <span className={`absolute top-2 left-2 text-xs px-2 py-0.5 rounded-full font-medium capitalize ${conditionColor[product.condition] ?? "bg-gray-100 text-gray-600"}`}>
-          {product.condition}
-        </span>
-      </div>
+      {/* Image — only show if exists */}
+      {product.image_url ? (
+        <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden shrink-0">
+          <Image
+            src={product.image_url}
+            alt={product.title}
+            fill
+            loading="lazy"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          />
+          <span className={`absolute top-2 left-2 text-xs px-2 py-0.5 rounded-full font-medium capitalize ${conditionColor[product.condition] ?? "bg-gray-100 text-gray-600"}`}>
+            {product.condition}
+          </span>
+        </div>
+      ) : (
+        <div className="aspect-[4/3] bg-gray-100 flex items-center justify-center shrink-0">
+          <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${conditionColor[product.condition] ?? "bg-gray-100 text-gray-600"}`}>
+            {product.condition}
+          </span>
+        </div>
+      )}
 
       {/* Info */}
       <div className="p-3 flex flex-col gap-1.5 flex-1">
