@@ -18,9 +18,9 @@ export default async function ChatInboxPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-        <MessageCircle size={24} className="text-primary" /> Messages
+    <div className="max-w-2xl mx-auto px-4 py-5 sm:py-8">
+      <h1 className="text-lg sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6 flex items-center gap-2">
+        <MessageCircle size={22} className="text-primary" /> Messages
       </h1>
 
       {conversations.length === 0 ? (

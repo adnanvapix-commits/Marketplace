@@ -6,15 +6,22 @@
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
+    /* Prevent double-tap zoom on buttons */
+    touch-action: manipulation;
   }
   body {
     @apply bg-gray-50 text-gray-900;
     overflow-x: hidden;
+    /* Smooth scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
   }
-  /* Prevent horizontal scroll globally */
   * {
     box-sizing: border-box;
     min-width: 0;
+  }
+  /* Remove tap highlight on mobile */
+  a, button {
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
