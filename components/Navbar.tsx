@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ShoppingBag, PlusCircle, MessageCircle, User, LogOut, Menu, X } from "lucide-react";
@@ -15,9 +15,14 @@ export default function Navbar() {
   const setUser = useAuthStore((s) => s.setUser);
   const setRole = useAuthStore((s) => s.setRole);
   const [open, setOpen] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Prevent showing auth UI before client hydration
+  useEffect(() => { setHydrated(true); }, []);
 
   const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@gmail.com";
   const isAdmin = role === "admin" || user?.email === ADMIN_EMAIL;
+  const isLoggedIn = hydrated && !!user;
 
   // Hide on admin pages
   if (pathname.startsWith("/admin")) return null;
@@ -42,7 +47,6 @@ export default function Navbar() {
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
 
-        {/* Logo */}
         <Link href="/" className="text-xl font-bold text-primary shrink-0">
           Market<span className="text-gray-800">Place</span>
         </Link>
@@ -53,30 +57,23 @@ export default function Navbar() {
             <ShoppingBag size={16} className="shrink-0" /> Buy
           </Link>
 
-          {user ? (
+          {isLoggedIn ? (
             <>
               <Link href="/sell" className={linkCls("/sell")}>
                 <PlusCircle size={16} className="shrink-0" /> Sell
               </Link>
-
               <Link href="/chat" className={linkCls("/chat")}>
                 <MessageCircle size={16} className="shrink-0" /> Chat
               </Link>
-
-              {/* Dashboard — goes to admin panel for admin, user dashboard for others */}
               <Link href={isAdmin ? "/admin" : "/dashboard"}
                 className={linkCls(isAdmin ? "/admin" : "/dashboard")}>
                 <User size={16} className="shrink-0" />
                 {isAdmin ? "Admin Dashboard" : "Dashboard"}
               </Link>
-
-              {/* Profile — merged account + profile */}
               <Link href="/profile" className={linkCls("/profile")}>
                 <User size={16} className="shrink-0" /> Profile
               </Link>
-
               <span className="w-px h-5 bg-gray-200 mx-2" />
-
               <button onClick={handleLogout}
                 className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-red-500 transition-colors whitespace-nowrap px-2 py-1 rounded-lg hover:bg-red-50">
                 <LogOut size={16} className="shrink-0" /> Logout
@@ -103,7 +100,7 @@ export default function Navbar() {
             <MobileLink href="/buy" icon={<ShoppingBag size={18} />} label="Buy"
               active={pathname === "/buy"} onClick={() => setOpen(false)} />
 
-            {user ? (
+            {isLoggedIn ? (
               <>
                 <MobileLink href="/sell" icon={<PlusCircle size={18} />} label="Sell"
                   active={pathname === "/sell"} onClick={() => setOpen(false)} />
@@ -117,9 +114,7 @@ export default function Navbar() {
                   onClick={() => setOpen(false)} />
                 <MobileLink href="/profile" icon={<User size={18} />} label="Profile"
                   active={pathname === "/profile"} onClick={() => setOpen(false)} />
-
                 <div className="border-t border-gray-100 my-2" />
-
                 <button onClick={handleLogout}
                   className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors w-full">
                   <LogOut size={18} className="shrink-0" /> Logout

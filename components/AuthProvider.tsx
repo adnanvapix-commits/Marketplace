@@ -11,26 +11,18 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     const supabase = createClient();
 
-    async function loadUser() {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      if (user) {
-        const { data } = await supabase
-          .from("users").select("role").eq("id", user.id).single();
-        setRole(data?.role ?? null);
-      } else {
-        setRole(null);
-      }
-    }
-
-    loadUser();
-
+    // Listen for auth state changes — this fires immediately with current session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setUser(session?.user ?? null);
-        if (session?.user) {
+      async (event, session) => {
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+
+        if (currentUser) {
           const { data } = await supabase
-            .from("users").select("role").eq("id", session.user.id).single();
+            .from("users")
+            .select("role")
+            .eq("id", currentUser.id)
+            .single();
           setRole(data?.role ?? null);
         } else {
           setRole(null);
