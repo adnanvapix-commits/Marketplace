@@ -30,13 +30,6 @@ export default function EditProfileForm({ profile, email, userId }: { profile: P
     setRoles((prev) => { const next = new Set(prev); if (next.has(r)) next.delete(r); else next.add(r); return next; });
   }
 
-  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5MB"); return; }
-    setAvatarFile(file); setAvatarPreview(URL.createObjectURL(file));
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!fullName.trim()) { toast.error("Full name is required"); return; }
@@ -62,7 +55,7 @@ export default function EditProfileForm({ profile, email, userId }: { profile: P
     } finally { setLoading(false); }
   }
 
-  const currentAvatar = avatarPreview ?? profile?.avatar_url;
+  const currentAvatar = profile?.avatar_url;
 
   return (
     <form onSubmit={handleSubmit} className="card p-5 sm:p-7 space-y-5">

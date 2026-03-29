@@ -13,14 +13,15 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Redirect admin to admin panel — check both role and email
-  const { data: profile } = await supabase
-    .from("users").select("role").eq("id", user.id).single();
+  // Redirect admin to admin panel
   const adminEmail = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@gmail.com").toLowerCase();
   const userEmail = (user.email || "").toLowerCase();
-  if (profileData?.role === "admin" || userEmail === adminEmail) {
-    redirect("/admin");
-  }
+  if (userEmail === adminEmail) redirect("/admin");
+
+  // Check role from DB
+  const { data: roleCheck } = await supabase
+    .from("users").select("role").eq("id", user.id).single();
+  if (roleCheck?.role === "admin") redirect("/admin");
 
   const [profileRes, productsRes, chatsRes] = await Promise.all([
     supabase.from("users").select("*").eq("id", user.id).single(),
@@ -34,7 +35,7 @@ export default async function DashboardPage() {
   const profileData = profileRes.data;
   const products = (productsRes.data as Product[]) ?? [];
   const chatCount = chatsRes.count ?? 0;
-  const subExpiry = profileData?.subscription_expiry ? new Date(profile.subscription_expiry) : null;
+  const subExpiry = profileData?.subscription_expiry ? new Date(profileData.subscription_expiry) : null;
   const subActive = profileData?.is_subscribed && subExpiry && subExpiry > new Date();
 
   return (
