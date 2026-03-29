@@ -25,7 +25,7 @@ interface Props {
 
 export const DEFAULT_FILTERS: FilterState = {
   category: "", condition: "", brand: "", location: "",
-  minPrice: "", maxPrice: "", minQty: "", minMoq: "", sort: "newest",
+  minPrice: "", maxPrice: "", minQty: "", minMoq: "", sort: "alpha",
 };
 
 export default function FilterSidebar({ filters, onChange, onClear, resultCount }: Props) {
@@ -71,9 +71,12 @@ export default function FilterSidebar({ filters, onChange, onClear, resultCount 
           {/* Sort */}
           <FilterSection label="Sort By">
             <select value={filters.sort} onChange={(e) => set("sort", e.target.value)} className="input text-sm min-h-[40px]">
+              <option value="alpha">A → Z (Default)</option>
               <option value="newest">Newest First</option>
               <option value="price_asc">Price: Low → High</option>
               <option value="price_desc">Price: High → Low</option>
+              <option value="qty_desc">Most Stock</option>
+            </select>
               <option value="qty_desc">Most Stock</option>
             </select>
           </FilterSection>

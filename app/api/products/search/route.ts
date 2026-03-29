@@ -58,10 +58,11 @@ export async function GET(req: NextRequest) {
   if (minMoq !== null)   query = query.lte("minimum_order_quantity", minMoq);
 
   // Sorting
-  if (sort === "price_asc")  query = query.order("price", { ascending: true });
+  if (sort === "price_asc")       query = query.order("price", { ascending: true });
   else if (sort === "price_desc") query = query.order("price", { ascending: false });
   else if (sort === "qty_desc")   query = query.order("quantity", { ascending: false });
-  else query = query.order("created_at", { ascending: false });
+  else if (sort === "alpha")      query = query.order("title", { ascending: true });
+  else                            query = query.order("title", { ascending: true }); // default: A-Z
 
   const { data, count, error } = await query.range(from, to);
 

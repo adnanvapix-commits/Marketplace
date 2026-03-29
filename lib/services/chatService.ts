@@ -36,7 +36,10 @@ export async function sendMessage(params: {
     product_id: params.productId,
     message: params.message,
   });
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("[sendMessage] error:", error.message, error.code);
+    throw new Error(error.message);
+  }
 }
 
 export interface Conversation {
