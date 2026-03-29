@@ -77,8 +77,6 @@ export default function FilterSidebar({ filters, onChange, onClear, resultCount 
               <option value="price_desc">Price: High → Low</option>
               <option value="qty_desc">Most Stock</option>
             </select>
-              <option value="qty_desc">Most Stock</option>
-            </select>
           </FilterSection>
 
           {/* Category */}
