@@ -1,15 +1,16 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import SubscriptionsTable from "./SubscriptionsTable";
+import type { AdminUser } from "@/lib/services/adminService";
 
 export default async function AdminSubscriptionsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   const db = createAdminClient();
-  const { data: users, error } = await db
+  const { data, error } = await db
     .from("users")
-    .select("id, email, role, is_subscribed, subscription_expiry, is_blocked, created_at")
+    .select("id, email, role, is_verified, verification_status, is_subscribed, subscription_expiry, is_blocked, created_at")
     .order("is_subscribed", { ascending: false });
 
   if (error) console.error("[admin/subscriptions] fetch error:", error.message);
@@ -19,7 +20,7 @@ export default async function AdminSubscriptionsPage() {
       <div className="mb-6">
         <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Subscription Management</h1>
         <p className="text-sm text-gray-500 mt-1">
-          {users?.filter((u) => u.is_subscribed).length ?? 0} active subscriptions
+          {data?.filter((u) => u.is_subscribed).length ?? 0} active subscriptions
         </p>
       </div>
 
@@ -28,7 +29,7 @@ export default async function AdminSubscriptionsPage() {
           Failed to load subscriptions: {error.message}
         </div>
       ) : (
-        <SubscriptionsTable initialUsers={users ?? []} adminId={user?.id ?? ""} />
+        <SubscriptionsTable initialUsers={(data ?? []) as AdminUser[]} adminId={user?.id ?? ""} />
       )}
     </div>
   );
