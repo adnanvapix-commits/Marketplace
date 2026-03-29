@@ -4,22 +4,29 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import AdminSidebar from "./AdminSidebar";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  // 1. Get current auth user (uses anon key + session cookie)
+  // 1. Get current auth session
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) redirect("/login");
 
-  // 2. Use admin client to read role (bypasses RLS)
-  const adminClient = createAdminClient();
-  const { data: profile } = await adminClient
-    .from("users")
-    .select("role, email")
-    .eq("id", user.id)
-    .single();
+  // 2. Use service role client to bypass RLS and read role
+  let isAdmin = false;
+  try {
+    const adminClient = createAdminClient();
+    const { data: profile } = await adminClient
+      .from("users")
+      .select("role, email")
+      .eq("id", user.id)
+      .single();
 
-  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
-  const isAdmin = profile?.role === "admin" || profile?.email === adminEmail;
+    const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
+    isAdmin = profile?.role === "admin" || profile?.email === adminEmail;
+  } catch {
+    // If service role key not set, fall back to email check only
+    const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
+    isAdmin = user.email === adminEmail;
+  }
 
   if (!isAdmin) redirect("/");
 
