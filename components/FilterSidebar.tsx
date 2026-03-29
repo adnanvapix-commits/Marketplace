@@ -114,7 +114,6 @@ export default function FilterSidebar({ filters, onChange, onClear, resultCount 
               type="text"
               value={filters.brand}
               onChange={(e) => set("brand", e.target.value)}
-              placeholder="e.g. Samsung, Apple"
               className="input text-sm min-h-[40px]"
             />
           </FilterSection>
@@ -122,10 +121,10 @@ export default function FilterSidebar({ filters, onChange, onClear, resultCount 
           {/* Price range */}
           <FilterSection label="Price Range ($)">
             <div className="flex gap-2">
-              <input type="number" placeholder="Min" value={filters.minPrice}
+              <input type="number" value={filters.minPrice}
                 onChange={(e) => set("minPrice", e.target.value)}
                 className="input text-sm min-h-[40px]" min={0} />
-              <input type="number" placeholder="Max" value={filters.maxPrice}
+              <input type="number" value={filters.maxPrice}
                 onChange={(e) => set("maxPrice", e.target.value)}
                 className="input text-sm min-h-[40px]" min={0} />
             </div>
@@ -133,25 +132,21 @@ export default function FilterSidebar({ filters, onChange, onClear, resultCount 
 
           {/* Location */}
           <FilterSection label="Location / Origin">
-            <input
-              type="text"
-              value={filters.location}
+            <input type="text" value={filters.location}
               onChange={(e) => set("location", e.target.value)}
-              placeholder="e.g. China, USA"
-              className="input text-sm min-h-[40px]"
-            />
+              className="input text-sm min-h-[40px]" />
           </FilterSection>
 
           {/* Stock */}
           <FilterSection label="Min. Available Stock">
-            <input type="number" placeholder="e.g. 100" value={filters.minQty}
+            <input type="number" value={filters.minQty}
               onChange={(e) => set("minQty", e.target.value)}
               className="input text-sm min-h-[40px]" min={1} />
           </FilterSection>
 
           {/* MOQ */}
           <FilterSection label="Max. Order Quantity">
-            <input type="number" placeholder="e.g. 10" value={filters.minMoq}
+            <input type="number" value={filters.minMoq}
               onChange={(e) => set("minMoq", e.target.value)}
               className="input text-sm min-h-[40px]" min={1} />
           </FilterSection>

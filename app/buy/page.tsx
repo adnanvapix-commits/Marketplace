@@ -22,30 +22,19 @@ function BuyPageInner() {
   const [count, setCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [searched, setSearched] = useState(
-    !!(searchParams.get("q") || searchParams.get("category"))
-  );
-  const [error, setError] = useState("");
+  const [searched, setSearched] = useState(true); // always show products
 
   // Debounce text inputs — 400ms delay
   const debouncedQuery    = useDebounce(query, 400);
   const debouncedBrand    = useDebounce(filters.brand, 400);
   const debouncedLocation = useDebounce(filters.location, 400);
 
-  const hasAnyFilter = !!(
-    debouncedQuery || filters.category || filters.condition ||
-    debouncedBrand || debouncedLocation ||
-    filters.minPrice || filters.maxPrice || filters.minQty || filters.minMoq
-  );
+  // Always fetch — empty query returns all products sorted A-Z
+  const hasAnyFilter = true;
+
+  const [error, setError] = useState("");
 
   const fetchProducts = useCallback(async () => {
-    if (!hasAnyFilter) {
-      setSearched(false);
-      setProducts([]);
-      setCount(0);
-      return;
-    }
-
     setLoading(true);
     setError("");
     setSearched(true);
