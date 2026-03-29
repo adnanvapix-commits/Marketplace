@@ -57,7 +57,7 @@ export default function LoginPage() {
             .eq("id", user.id)
             .single();
 
-          if (profile?.role === "admin") {
+          if (profile?.role === "admin" || user.email === adminEmail) {
             router.push("/admin");
           } else if (!profile?.is_verified) {
             router.push("/pending");

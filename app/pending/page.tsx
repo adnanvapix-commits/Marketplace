@@ -15,6 +15,14 @@ export default function PendingPage() {
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push("/login"); return; }
+
+      // Admin bypass — go straight to admin panel
+      const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
+      if (user.email === adminEmail) {
+        router.push("/admin");
+        return;
+      }
+
       const { data } = await supabase
         .from("users")
         .select("verification_status, is_verified, is_subscribed")
