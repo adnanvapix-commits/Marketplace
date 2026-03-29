@@ -74,10 +74,12 @@ export default function Navbar() {
                 <User size={16} className="shrink-0" /> Profile
               </Link>
               <span className="w-px h-5 bg-gray-200 mx-2" />
-              <button onClick={handleLogout}
-                className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-red-500 transition-colors whitespace-nowrap px-2 py-1 rounded-lg hover:bg-red-50">
-                <LogOut size={16} className="shrink-0" /> Logout
-              </button>
+              <form action="/api/auth/logout" method="POST">
+                <button type="submit"
+                  className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-red-500 transition-colors whitespace-nowrap px-2 py-1 rounded-lg hover:bg-red-50">
+                  <LogOut size={16} className="shrink-0" /> Logout
+                </button>
+              </form>
             </>
           ) : (
             <Link href="/login" className="ml-2 btn-primary text-sm px-4 py-2">
@@ -115,10 +117,12 @@ export default function Navbar() {
                 <MobileLink href="/profile" icon={<User size={18} />} label="Profile"
                   active={pathname === "/profile"} onClick={() => setOpen(false)} />
                 <div className="border-t border-gray-100 my-2" />
-                <button onClick={handleLogout}
-                  className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors w-full">
-                  <LogOut size={18} className="shrink-0" /> Logout
-                </button>
+                <form action="/api/auth/logout" method="POST">
+                  <button type="submit"
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors w-full">
+                    <LogOut size={18} className="shrink-0" /> Logout
+                  </button>
+                </form>
               </>
             ) : (
               <Link href="/login" onClick={() => setOpen(false)}
