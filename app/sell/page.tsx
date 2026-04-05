@@ -51,8 +51,23 @@ export default function SellPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!user) { toast.error("Please login first"); router.push("/login"); return; }
-    if (!verifyChecked) { toast.error("Checking verification status..."); return; }
-    if (!isVerified) { setShowVerifyModal(true); return; }
+
+    // If verification check hasn't completed yet, fetch it now inline
+    let verified = isVerified;
+    if (!verifyChecked) {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("users")
+        .select("is_verified")
+        .eq("id", user.id)
+        .single();
+      verified = data?.is_verified ?? false;
+      setLocalVerified(verified);
+      setIsVerified(verified);
+      setVerifyChecked(true);
+    }
+
+    if (!verified) { setShowVerifyModal(true); return; }
     setLoading(true);
     try {
       const supabase = createClient();
