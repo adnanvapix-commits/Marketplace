@@ -76,70 +76,14 @@ export async function updateSession(request: NextRequest) {
       return supabaseResponse;
     }
 
-    // 3. Unauthenticated protection — login required routes (Req 5.7, 10.3)
-    const loginRequiredPrefixes = [
-      "/buy",
-      "/sell",
-      "/chat",
-      "/dashboard",
-      "/profile",
-    ];
-    const requiresLogin = loginRequiredPrefixes.some((p) =>
-      path.startsWith(p)
-    );
+    // 3. Unauthenticated protection — login required routes
+    const loginRequiredPrefixes = ["/sell", "/chat", "/dashboard", "/profile"];
+    const requiresLogin = loginRequiredPrefixes.some((p) => path.startsWith(p));
 
     if (requiresLogin && !user) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       return NextResponse.redirect(url);
-    }
-
-    // 4. Verification gating — authenticated but unverified users (Req 5.1–5.4)
-    const verificationGatedPrefixes = ["/buy", "/sell", "/chat", "/dashboard"];
-    const requiresVerification = verificationGatedPrefixes.some((p) =>
-      path.startsWith(p)
-    );
-
-    if (requiresVerification && user) {
-      let isVerified = false;
-
-      try {
-        const { data: profile, error } = await supabase
-          .from("users")
-          .select("is_verified")
-          .eq("id", user.id)
-          .single();
-
-        if (error) {
-          // Error handling: treat as unverified and redirect to /home (Req error handling)
-          const url = request.nextUrl.clone();
-          url.pathname = "/home";
-          const redirectResponse = NextResponse.redirect(url);
-          return redirectResponse;
-        }
-
-        isVerified = profile?.is_verified ?? false;
-      } catch {
-        // Query failed — treat as unverified, redirect to /home
-        const url = request.nextUrl.clone();
-        url.pathname = "/home";
-        return NextResponse.redirect(url);
-      }
-
-      if (!isVerified) {
-        // Set cookie so client can show toast (Req 5.5)
-        const url = request.nextUrl.clone();
-        url.pathname = "/home";
-        const redirectResponse = NextResponse.redirect(url);
-        redirectResponse.cookies.set("verification_redirect", "1", {
-          path: "/",
-          maxAge: 30,
-        });
-        return redirectResponse;
-      }
-
-      // 5. Verified users — allow through (Req 5.6)
-      return supabaseResponse;
     }
   } catch {
     return supabaseResponse;
