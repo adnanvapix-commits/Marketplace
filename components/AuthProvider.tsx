@@ -15,22 +15,44 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     const supabase = createClient();
 
+    async function fetchProfile(userId: string) {
+      const { data } = await supabase
+        .from("users")
+        .select("role, is_verified, full_name, whatsapp_number")
+        .eq("id", userId)
+        .single();
+
+      setRole(data?.role ?? null);
+      setUserRole(data?.role ?? null);
+      setIsVerified(data?.is_verified ?? false);
+      setHasCompletedProfile(!!(data?.full_name && data?.whatsapp_number));
+    }
+
+    // Auth state listener — fires on mount with current session + on login/logout
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         const currentUser = session?.user ?? null;
         setUser(currentUser);
 
         if (currentUser) {
-          const { data } = await supabase
-            .from("users")
-            .select("role, is_verified, full_name, whatsapp_number")
-            .eq("id", currentUser.id)
-            .single();
+          await fetchProfile(currentUser.id);
 
-          setRole(data?.role ?? null);
-          setUserRole(data?.role ?? null);
-          setIsVerified(data?.is_verified ?? false);
-          setHasCompletedProfile(!!(data?.full_name && data?.whatsapp_number));
+          // Realtime: re-fetch profile whenever admin updates is_verified
+          supabase
+            .channel(`user-profile-${currentUser.id}`)
+            .on(
+              "postgres_changes",
+              {
+                event: "UPDATE",
+                schema: "public",
+                table: "users",
+                filter: `id=eq.${currentUser.id}`,
+              },
+              async () => {
+                await fetchProfile(currentUser.id);
+              }
+            )
+            .subscribe();
         } else {
           setRole(null);
           setUserRole(null);
@@ -38,7 +60,6 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
           setHasCompletedProfile(false);
         }
 
-        // Mark store as hydrated after first auth resolution
         setHydrated(true);
       }
     );
