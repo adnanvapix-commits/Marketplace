@@ -70,19 +70,15 @@ export default function SellPage() {
     if (!verified) { setShowVerifyModal(true); return; }
     setLoading(true);
     try {
-      const supabase = createClient();
-      const { error } = await supabase.from("products").insert({
-        user_id: user.id,
-        title, description,
-        price: parseFloat(price),
-        category, location, brand,
-        quantity: parseInt(quantity),
-        minimum_order_quantity: parseInt(moq),
-        condition,
-        image_url: "", // no image required
-        is_active: true,
+      const res = await fetch("/api/products/mutate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, description, price, category, location, brand, quantity, minimum_order_quantity: moq, condition }),
       });
-      if (error) throw error;
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? "Failed to list product");
+      }
       setDone(true);
       toast.success("Product listed!");
       setTimeout(() => router.push("/dashboard"), 1200);

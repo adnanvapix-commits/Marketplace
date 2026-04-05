@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { deleteProduct } from "@/lib/services/productService";
 import toast from "react-hot-toast";
 
 export default function DeleteProductButton({ productId }: { productId: string }) {
@@ -14,11 +13,19 @@ export default function DeleteProductButton({ productId }: { productId: string }
     if (!confirm("Delete this listing? This cannot be undone.")) return;
     setLoading(true);
     try {
-      await deleteProduct(productId);
+      const res = await fetch("/api/products/mutate", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? "Failed to delete");
+      }
       toast.success("Listing deleted");
       router.refresh();
-    } catch {
-      toast.error("Failed to delete");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete");
     } finally {
       setLoading(false);
     }

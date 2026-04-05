@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, CheckCircle } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { CATEGORIES, CONDITIONS, type Product } from "@/types";
 import toast from "react-hot-toast";
 
@@ -26,20 +25,21 @@ export default function EditProductForm({ product }: { product: Product }) {
     e.preventDefault();
     setLoading(true);
     try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("products")
-        .update({
+      const res = await fetch("/api/products/mutate", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: product.id,
           title, description,
-          price: parseFloat(price),
-          category, location, brand,
-          quantity: parseInt(quantity),
-          minimum_order_quantity: parseInt(moq),
+          price, category, location, brand,
+          quantity, minimum_order_quantity: moq,
           condition,
-        })
-        .eq("id", product.id);
-
-      if (error) throw error;
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? "Failed to update");
+      }
       setDone(true);
       toast.success("Listing updated!");
       setTimeout(() => router.push("/profile"), 1000);
