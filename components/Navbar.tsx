@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, ShoppingBag, PlusCircle, MessageCircle, User, LogOut, Menu, X } from "lucide-react";
@@ -11,12 +11,13 @@ export default function Navbar() {
   const user = useAuthStore((s) => s.user);
   const role = useAuthStore((s) => s.role);
   const isVerified = useAuthStore((s) => s.isVerified);
-  const hydrated = useAuthStore((s) => s.hydrated);
   const [open, setOpen] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => { setHydrated(true); }, []);
 
   const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@gmail.com";
   const isAdmin = role === "admin" || user?.email === ADMIN_EMAIL;
-  // Only show logged-in UI after auth has resolved to avoid flash
   const isLoggedIn = hydrated && !!user;
 
   if (pathname.startsWith("/admin")) return null;

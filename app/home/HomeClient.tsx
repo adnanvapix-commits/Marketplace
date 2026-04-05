@@ -90,7 +90,7 @@ function HomeInner() {
 
   return (
     <div>
-      {showBanner && <VerificationBanner />}
+      {!isVerified && <VerificationBanner />}
 
       <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6">
         {/* Search bar */}
