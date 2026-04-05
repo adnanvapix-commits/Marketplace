@@ -33,7 +33,7 @@ export async function updateSession(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     const path = request.nextUrl.pathname;
 
-    // 1. Auth guard — redirect authenticated users away from login/register
+    // 1. Auth guard
     if (path === "/login" || path === "/register") {
       if (user) {
         const url = request.nextUrl.clone();
@@ -60,35 +60,58 @@ export async function updateSession(request: NextRequest) {
       return supabaseResponse;
     }
 
-    // 3. Routes that require login
+    // 3. Login required
     const loginRequired = ["/sell", "/buy", "/chat", "/dashboard", "/profile"];
     const requiresLogin = loginRequired.some((p) => path.startsWith(p));
-
     if (requiresLogin && !user) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       return NextResponse.redirect(url);
     }
 
-    // 4. Verification gating — logged-in but unverified users blocked from core routes
+    // 4. Verification gating — use cached cookie to avoid DB hit on every request
     const verificationRequired = ["/sell", "/buy", "/chat", "/dashboard"];
     const requiresVerification = verificationRequired.some((p) => path.startsWith(p));
 
     if (requiresVerification && user) {
+      // Check cached verification status (5 min TTL)
+      const cachedVerified = request.cookies.get(`verified_${user.id}`)?.value;
+
+      if (cachedVerified === "1") {
+        // Already verified — allow through without DB query
+        return supabaseResponse;
+      }
+
+      if (cachedVerified === "0") {
+        // Cached as unverified — redirect without DB query
+        const url = request.nextUrl.clone();
+        url.pathname = "/";
+        const redirectResponse = NextResponse.redirect(url);
+        redirectResponse.cookies.set("unverified_redirect", "1", { path: "/", maxAge: 10 });
+        return redirectResponse;
+      }
+
+      // No cache — fetch from DB and cache result
       try {
         const { data: profile } = await supabase
           .from("users").select("is_verified").eq("id", user.id).single();
 
-        if (!profile?.is_verified) {
+        const isVerified = profile?.is_verified ?? false;
+
+        if (!isVerified) {
           const url = request.nextUrl.clone();
           url.pathname = "/";
-          // Set a short-lived cookie so the home page can show a toast
           const redirectResponse = NextResponse.redirect(url);
           redirectResponse.cookies.set("unverified_redirect", "1", { path: "/", maxAge: 10 });
+          // Cache unverified for 60s
+          redirectResponse.cookies.set(`verified_${user.id}`, "0", { path: "/", maxAge: 60 });
           return redirectResponse;
         }
+
+        // Cache verified for 5 minutes
+        supabaseResponse.cookies.set(`verified_${user.id}`, "1", { path: "/", maxAge: 300 });
       } catch {
-        // If profile fetch fails, allow through (don't block on DB errors)
+        // DB error — allow through, don't block
       }
     }
 
