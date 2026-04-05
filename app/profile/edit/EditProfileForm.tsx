@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Loader2, CheckCircle, Camera, User } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { uploadImage } from "@/lib/cloudinary";
 import toast from "react-hot-toast";
 
@@ -66,24 +65,23 @@ export default function EditProfileForm({ profile, email, userId }: {
         }
       }
 
-      const supabase = createClient();
-      const updatePayload: Record<string, string> = {
-        full_name: fullName.trim(),
-      };
-      if (companyName.trim()) updatePayload.company_name = companyName.trim();
-      if (phone.trim()) updatePayload.phone = phone.trim();
-      if (whatsapp.trim()) updatePayload.whatsapp_number = whatsapp.trim();
-      if (country.trim()) updatePayload.country = country.trim();
-      if (finalAvatarUrl) updatePayload.avatar_url = finalAvatarUrl;
+      const res = await fetch("/api/profile/update", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: fullName.trim(),
+          company_name: companyName.trim() || undefined,
+          phone: phone.trim() || undefined,
+          whatsapp_number: whatsapp.trim() || undefined,
+          country: country.trim() || undefined,
+          avatar_url: finalAvatarUrl || undefined,
+        }),
+      });
 
-      const { error } = await supabase
-        .from("users")
-        .update(updatePayload)
-        .eq("id", userId);
-
-      if (error) {
-        console.error("Profile update error:", error);
-        throw new Error(error.message);
+      if (!res.ok) {
+        const err = await res.json();
+        console.error("[EditProfileForm] API error:", err);
+        throw new Error(err.error ?? "Failed to update profile");
       }
 
       setAvatarUrl(finalAvatarUrl);
