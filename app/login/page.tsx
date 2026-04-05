@@ -57,7 +57,7 @@ export default function LoginPage() {
           });
         }
         toast.success("Account created! Welcome to B2B Market.");
-        router.push("/home");
+        router.push("/");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -76,7 +76,7 @@ export default function LoginPage() {
           if (profile?.role === "admin" || user.email === adminEmail) {
             window.location.href = "/admin";
           } else {
-            window.location.href = "/home";
+            window.location.href = "/";
           }
         }
       }

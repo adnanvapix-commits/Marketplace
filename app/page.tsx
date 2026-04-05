@@ -34,6 +34,18 @@ export default function HomePage() {
               Search
             </button>
           </form>
+
+          {/* Buy / Sell buttons */}
+          <div className="flex items-center justify-center gap-3 mt-4">
+            <Link href="/buy"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-white text-primary font-semibold text-sm hover:bg-white/90 transition-all active:scale-95">
+              🛒 Buy
+            </Link>
+            <Link href="/sell"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl border-2 border-white text-white font-semibold text-sm hover:bg-white/10 transition-all active:scale-95">
+              🏷️ Sell
+            </Link>
+          </div>
         </div>
       </section>
 

@@ -47,7 +47,7 @@ export async function updateSession(request: NextRequest) {
     if (path === "/login" || path === "/register") {
       if (user) {
         const url = request.nextUrl.clone();
-        url.pathname = "/home";
+        url.pathname = "/";
         return NextResponse.redirect(url);
       }
       return supabaseResponse;
