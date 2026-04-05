@@ -1,20 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ShoppingBag, PlusCircle, MessageCircle, User, LogOut, Menu, X } from "lucide-react";
+import { Home, ShoppingBag, PlusCircle, MessageCircle, User, LogOut, Menu, X, Phone } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
+
+const WHATSAPP_URL = "https://wa.me/97556331247";
 
 export default function Navbar() {
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
   const role = useAuthStore((s) => s.role);
   const isVerified = useAuthStore((s) => s.isVerified);
+  const hydrated = useAuthStore((s) => s.hydrated);
   const [open, setOpen] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => { setHydrated(true); }, []);
 
   const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@gmail.com";
   const isAdmin = role === "admin" || user?.email === ADMIN_EMAIL;
@@ -45,6 +45,16 @@ export default function Navbar() {
           <Link href="/buy" className={linkCls("/buy")}>
             <ShoppingBag size={16} className="shrink-0" /> Buy
           </Link>
+
+          {/* WhatsApp contact — visible to all users */}
+          <a
+            href={WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-sm font-medium text-green-600 hover:text-green-700 whitespace-nowrap transition-colors px-2 py-1 rounded-lg hover:bg-green-50"
+          >
+            <Phone size={16} className="shrink-0" /> Contact
+          </a>
 
           {isLoggedIn ? (
             <>
@@ -98,6 +108,17 @@ export default function Navbar() {
 
             <MobileLink href="/buy" icon={<ShoppingBag size={18} />} label="Buy"
               active={pathname === "/buy"} onClick={() => setOpen(false)} />
+
+            {/* WhatsApp contact — mobile */}
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-green-600 hover:bg-green-50 transition-colors"
+            >
+              <Phone size={18} className="shrink-0" /> Contact
+            </a>
 
             {isLoggedIn ? (
               <>
