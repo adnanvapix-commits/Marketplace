@@ -1,39 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
-import { createClient } from "@/lib/supabase/client";
 import { CATEGORIES, CONDITIONS } from "@/types";
 import toast from "react-hot-toast";
 
 export default function SellPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const storeIsVerified = useAuthStore((s) => s.isVerified);
-  const setIsVerified = useAuthStore((s) => s.setIsVerified);
-
-  // Always fetch fresh verification status from DB on mount
-  const [isVerified, setLocalVerified] = useState(storeIsVerified);
-  const [verifyChecked, setVerifyChecked] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-    const supabase = createClient();
-    supabase
-      .from("users")
-      .select("is_verified")
-      .eq("id", user.id)
-      .single()
-      .then(({ data }) => {
-        const v = data?.is_verified ?? false;
-        setLocalVerified(v);
-        setIsVerified(v); // keep store in sync
-        setVerifyChecked(true);
-      });
-  }, [user, setIsVerified]);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -46,28 +22,11 @@ export default function SellPage() {
   const [condition, setCondition] = useState<"new" | "used" | "refurbished">("new");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!user) { toast.error("Please login first"); router.push("/login"); return; }
 
-    // If verification check hasn't completed yet, fetch it now inline
-    let verified = isVerified;
-    if (!verifyChecked) {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("users")
-        .select("is_verified")
-        .eq("id", user.id)
-        .single();
-      verified = data?.is_verified ?? false;
-      setLocalVerified(verified);
-      setIsVerified(verified);
-      setVerifyChecked(true);
-    }
-
-    if (!verified) { setShowVerifyModal(true); return; }
     setLoading(true);
     try {
       const res = await fetch("/api/products/mutate", {
@@ -75,10 +34,17 @@ export default function SellPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, description, price, category, location, brand, quantity, minimum_order_quantity: moq, condition }),
       });
+
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error ?? "Failed to list product");
+        if (err.error === "Account not verified") {
+          toast.error("Your account needs to be verified before you can publish listings.");
+        } else {
+          throw new Error(err.error ?? "Failed to list product");
+        }
+        return;
       }
+
       setDone(true);
       toast.success("Product listed!");
       setTimeout(() => router.push("/dashboard"), 1200);
@@ -96,22 +62,18 @@ export default function SellPage() {
         <p className="text-sm text-gray-500 mb-6">Fill in your product details for B2B buyers</p>
 
         <form onSubmit={handleSubmit} className="card p-5 sm:p-7 space-y-5">
-
-          {/* Title */}
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">Product Title <span className="text-red-400">*</span></label>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
               className="input min-h-[44px]" required maxLength={100} />
           </div>
 
-          {/* Description */}
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">Description <span className="text-red-400">*</span></label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)}
               className="input resize-none" rows={4} required />
           </div>
 
-          {/* Brand + Category */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-1">Brand</label>
@@ -127,7 +89,6 @@ export default function SellPage() {
             </div>
           </div>
 
-          {/* Condition */}
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-2">Condition <span className="text-red-400">*</span></label>
             <div className="flex gap-2 flex-wrap">
@@ -142,7 +103,6 @@ export default function SellPage() {
             </div>
           </div>
 
-          {/* Price + Quantity + MOQ */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-1">Unit Price ($) <span className="text-red-400">*</span></label>
@@ -161,7 +121,6 @@ export default function SellPage() {
             </div>
           </div>
 
-          {/* Location */}
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">Location / Origin</label>
             <input type="text" value={location} onChange={(e) => setLocation(e.target.value)}
@@ -176,34 +135,6 @@ export default function SellPage() {
           </button>
         </form>
       </div>
-
-      {/* Verification Required Modal */}
-      {showVerifyModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-xl">
-            <AlertCircle size={48} className="text-amber-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-800 mb-2">Verification Required</h2>
-            <p className="text-gray-500 text-sm mb-6">
-              Your account needs to be verified before you can publish listings.
-            </p>
-            <div className="flex flex-col gap-3">
-              <Link
-                href="/account"
-                className="btn-primary w-full min-h-[44px] flex items-center justify-center text-sm font-medium"
-              >
-                Complete Verification
-              </Link>
-              <button
-                type="button"
-                onClick={() => setShowVerifyModal(false)}
-                className="w-full min-h-[44px] rounded-lg border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
