@@ -44,32 +44,47 @@ export default function EditProfileForm({ profile, email, userId }: {
     if (!fullName.trim()) { toast.error("Full name is required"); return; }
 
     setLoading(true);
-    try {
-      let finalAvatarUrl = avatarUrl;
+    let finalAvatarUrl = avatarUrl;
 
-      // Upload new avatar if selected
+    try {
+      // Upload new avatar if selected and Cloudinary is configured
       if (avatarFile) {
-        setUploading(true);
-        try {
-          finalAvatarUrl = await uploadImage(avatarFile);
-        } catch {
-          toast.error("Avatar upload failed — profile saved without new photo");
-        } finally {
-          setUploading(false);
+        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+        const preset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+        if (cloudName && preset) {
+          setUploading(true);
+          try {
+            finalAvatarUrl = await uploadImage(avatarFile);
+          } catch (uploadErr) {
+            console.error("Avatar upload error:", uploadErr);
+            toast.error("Photo upload failed — saving profile without new photo");
+          } finally {
+            setUploading(false);
+          }
+        } else {
+          toast("Photo upload skipped — Cloudinary not configured", { icon: "ℹ️" });
         }
       }
 
       const supabase = createClient();
-      const { error } = await supabase.from("users").update({
+      const updatePayload: Record<string, string> = {
         full_name: fullName.trim(),
-        ...(companyName.trim() ? { company_name: companyName.trim() } : {}),
-        ...(phone.trim() ? { phone: phone.trim() } : {}),
-        ...(whatsapp.trim() ? { whatsapp_number: whatsapp.trim() } : {}),
-        ...(country.trim() ? { country: country.trim() } : {}),
-        avatar_url: finalAvatarUrl,
-      }).eq("id", userId);
+      };
+      if (companyName.trim()) updatePayload.company_name = companyName.trim();
+      if (phone.trim()) updatePayload.phone = phone.trim();
+      if (whatsapp.trim()) updatePayload.whatsapp_number = whatsapp.trim();
+      if (country.trim()) updatePayload.country = country.trim();
+      if (finalAvatarUrl) updatePayload.avatar_url = finalAvatarUrl;
 
-      if (error) throw error;
+      const { error } = await supabase
+        .from("users")
+        .update(updatePayload)
+        .eq("id", userId);
+
+      if (error) {
+        console.error("Profile update error:", error);
+        throw new Error(error.message);
+      }
 
       setAvatarUrl(finalAvatarUrl);
       setAvatarFile(null);
@@ -78,14 +93,15 @@ export default function EditProfileForm({ profile, email, userId }: {
       toast.success("Profile updated!");
       setTimeout(() => router.push("/profile"), 1000);
     } catch (err: unknown) {
+      console.error("handleSubmit error:", err);
       toast.error(err instanceof Error ? err.message : "Failed to update profile");
     } finally {
       setLoading(false);
+      setUploading(false);
     }
   }
 
   const displayAvatar = avatarPreview ?? (avatarUrl || null);
-  const initials = (fullName || email)?.[0]?.toUpperCase() ?? "?";
 
   return (
     <form onSubmit={handleSubmit} className="card p-5 sm:p-7 space-y-5">
