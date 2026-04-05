@@ -14,7 +14,8 @@ import type { Product } from "@/types";
 function HomeInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isVerified } = useAuthStore();
+  const { isVerified, user, hydrated } = useAuthStore();
+  const isLoggedIn = hydrated && !!user;
 
   const [query, setQuery] = useState(searchParams.get("q") || "");
   const [filters, setFilters] = useState<FilterState>({
@@ -69,7 +70,7 @@ function HomeInner() {
   function clearAll() { setQuery(""); setFilters(DEFAULT_FILTERS); setPage(1); }
 
   function handleBuy() {
-    if (!isVerified) {
+    if (!isLoggedIn || !isVerified) {
       toast.error("You need admin verification to access this feature.");
       return;
     }
@@ -77,16 +78,19 @@ function HomeInner() {
   }
 
   function handleSell() {
-    if (!isVerified) {
+    if (!isLoggedIn || !isVerified) {
       toast.error("You need admin verification to sell products.");
       return;
     }
     router.push("/sell");
   }
 
+  // Wait for auth to resolve before showing verification-dependent UI
+  const showBanner = hydrated && isLoggedIn && !isVerified;
+
   return (
     <div>
-      {!isVerified && <VerificationBanner />}
+      {showBanner && <VerificationBanner />}
 
       <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6">
         {/* Search bar */}
