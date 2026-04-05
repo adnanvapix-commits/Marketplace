@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, X, Loader2, ShoppingBag, PlusCircle } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
+import { createClient } from "@/lib/supabase/client";
 import FilterSidebar, { DEFAULT_FILTERS, type FilterState } from "@/components/FilterSidebar";
 import ProductCard from "@/components/ProductCard";
 import { useDebounce } from "@/lib/hooks/useDebounce";
@@ -14,7 +15,27 @@ import type { Product } from "@/types";
 function HomeInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isVerified, user, hydrated } = useAuthStore();
+  const { user, hydrated } = useAuthStore();
+  const storeIsVerified = useAuthStore((s) => s.isVerified);
+  const setIsVerified = useAuthStore((s) => s.setIsVerified);
+
+  // Fresh verification check from DB on mount
+  const [isVerified, setLocalVerified] = useState(storeIsVerified);
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createClient();
+    supabase
+      .from("users")
+      .select("is_verified")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => {
+        const v = data?.is_verified ?? false;
+        setLocalVerified(v);
+        setIsVerified(v);
+      });
+  }, [user, setIsVerified]);
+
   const isLoggedIn = hydrated && !!user;
 
   const [query, setQuery] = useState(searchParams.get("q") || "");

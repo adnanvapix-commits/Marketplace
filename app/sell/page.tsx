@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
@@ -12,7 +12,28 @@ import toast from "react-hot-toast";
 export default function SellPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const isVerified = useAuthStore((s) => s.isVerified);
+  const storeIsVerified = useAuthStore((s) => s.isVerified);
+  const setIsVerified = useAuthStore((s) => s.setIsVerified);
+
+  // Always fetch fresh verification status from DB on mount
+  const [isVerified, setLocalVerified] = useState(storeIsVerified);
+  const [verifyChecked, setVerifyChecked] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createClient();
+    supabase
+      .from("users")
+      .select("is_verified")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => {
+        const v = data?.is_verified ?? false;
+        setLocalVerified(v);
+        setIsVerified(v); // keep store in sync
+        setVerifyChecked(true);
+      });
+  }, [user, setIsVerified]);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -30,6 +51,7 @@ export default function SellPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!user) { toast.error("Please login first"); router.push("/login"); return; }
+    if (!verifyChecked) { toast.error("Checking verification status..."); return; }
     if (!isVerified) { setShowVerifyModal(true); return; }
     setLoading(true);
     try {
