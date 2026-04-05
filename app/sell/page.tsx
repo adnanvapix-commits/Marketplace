@@ -70,15 +70,19 @@ export default function SellPage() {
     if (!verified) { setShowVerifyModal(true); return; }
     setLoading(true);
     try {
-      const res = await fetch("/api/products/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, price, category, location, brand, quantity, minimum_order_quantity: moq, condition }),
+      const supabase = createClient();
+      const { error } = await supabase.from("products").insert({
+        user_id: user.id,
+        title, description,
+        price: parseFloat(price),
+        category, location, brand,
+        quantity: parseInt(quantity),
+        minimum_order_quantity: parseInt(moq),
+        condition,
+        image_url: "", // no image required
+        is_active: true,
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error ?? "Failed to list product");
-      }
+      if (error) throw error;
       setDone(true);
       toast.success("Product listed!");
       setTimeout(() => router.push("/dashboard"), 1200);
