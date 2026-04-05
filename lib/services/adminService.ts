@@ -4,7 +4,6 @@ export interface AdminUser {
   id: string;
   email: string;
   full_name?: string;
-  username?: string;
   role: string;
   is_verified: boolean;
   verification_status: "pending" | "approved" | "rejected";
@@ -66,7 +65,7 @@ export async function fetchAdminUsers(search = ""): Promise<AdminUser[]> {
   const supabase = createClient();
   let q = supabase
     .from("users")
-    .select("id, email, full_name, username, role, is_verified, verification_status, is_subscribed, subscription_expiry, is_blocked, company_name, whatsapp_number, created_at")
+    .select("id, email, full_name, role, is_verified, verification_status, is_subscribed, subscription_expiry, is_blocked, company_name, whatsapp_number, created_at")
     .order("created_at", { ascending: false });
   if (search.trim()) q = q.ilike("email", `%${search.trim()}%`);
   const { data, error } = await q;

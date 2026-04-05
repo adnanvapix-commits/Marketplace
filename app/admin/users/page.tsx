@@ -10,7 +10,7 @@ export default async function AdminUsersPage() {
   const db = createAdminClient();
   const { data, error } = await db
     .from("users")
-    .select("id, email, full_name, username, role, is_verified, verification_status, is_subscribed, subscription_expiry, is_blocked, company_name, whatsapp_number, created_at")
+    .select("id, email, full_name, role, is_verified, verification_status, is_subscribed, subscription_expiry, is_blocked, company_name, whatsapp_number, created_at")
     .order("created_at", { ascending: false });
 
   if (error) console.error("[admin/users] fetch error:", error.message);
