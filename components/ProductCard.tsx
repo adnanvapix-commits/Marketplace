@@ -1,7 +1,6 @@
 "use client";
 
 import { memo } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Package, Tag } from "lucide-react";
 import type { Product } from "@/types";
@@ -14,32 +13,18 @@ const conditionColor = {
 
 const ProductCard = memo(function ProductCard({ product }: { product: Product }) {
   return (
-    <Link href={`/product/${product.id}`} className="card group hover:shadow-md transition-shadow flex flex-col">
-      {/* Image — only show if exists */}
-      {product.image_url ? (
-        <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden shrink-0">
-          <Image
-            src={product.image_url}
-            alt={product.title}
-            fill
-            loading="lazy"
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          />
-          <span className={`absolute top-2 left-2 text-xs px-2 py-0.5 rounded-full font-medium capitalize ${conditionColor[product.condition] ?? "bg-gray-100 text-gray-600"}`}>
-            {product.condition}
-          </span>
-        </div>
-      ) : (
-        <div className="aspect-[4/3] bg-gray-100 flex items-center justify-center shrink-0">
-          <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${conditionColor[product.condition] ?? "bg-gray-100 text-gray-600"}`}>
-            {product.condition}
-          </span>
-        </div>
-      )}
+    <Link href={`/product/${product.id}`}
+      className="card group hover:shadow-md transition-shadow flex flex-row items-start gap-3 p-3">
 
-      {/* Info */}
-      <div className="p-3 flex flex-col gap-1.5 flex-1">
+      {/* Condition badge — left side */}
+      <div className="shrink-0 mt-0.5">
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${conditionColor[product.condition] ?? "bg-gray-100 text-gray-600"}`}>
+          {product.condition}
+        </span>
+      </div>
+
+      {/* Info — right side */}
+      <div className="flex flex-col gap-1 flex-1 min-w-0">
         <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 leading-snug">
           {product.title}
         </h3>
@@ -50,9 +35,9 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
           </p>
         )}
 
-        <div className="flex items-center justify-between mt-auto pt-1">
+        <div className="flex items-center justify-between mt-1">
           <div>
-            <p className="text-base font-bold text-primary">${product.price.toLocaleString()}</p>
+            <p className="text-sm font-bold text-primary">${product.price.toLocaleString()}</p>
             <p className="text-xs text-gray-400">MOQ: {product.minimum_order_quantity} units</p>
           </div>
           <div className="text-right">
@@ -62,15 +47,14 @@ const ProductCard = memo(function ProductCard({ product }: { product: Product })
             {product.location && (
               <p className="text-xs text-gray-400 flex items-center gap-0.5 justify-end">
                 <MapPin size={9} className="shrink-0" />
-                <span className="truncate max-w-[70px]">{product.location}</span>
+                <span className="truncate max-w-[80px]">{product.location}</span>
               </p>
             )}
           </div>
         </div>
 
-        {/* Seller */}
         {product.users && (
-          <p className="text-xs text-gray-400 border-t pt-1.5 truncate">
+          <p className="text-xs text-gray-400 border-t pt-1 truncate">
             {product.users.company_name || product.users.email?.split("@")[0]}
           </p>
         )}
