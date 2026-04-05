@@ -22,7 +22,6 @@ export default function EditProfileForm({ profile, email, userId }: {
   const [fullName, setFullName] = useState(profile?.full_name ?? "");
   const [companyName, setCompanyName] = useState(profile?.company_name ?? "");
   const [phone, setPhone] = useState(profile?.phone ?? "");
-  const [whatsapp, setWhatsapp] = useState(profile?.whatsapp_number ?? "");
   const [country, setCountry] = useState(profile?.country ?? "");
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url ?? "");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -72,7 +71,6 @@ export default function EditProfileForm({ profile, email, userId }: {
           full_name: fullName.trim(),
           company_name: companyName.trim() || undefined,
           phone: phone.trim() || undefined,
-          whatsapp_number: whatsapp.trim() || undefined,
           country: country.trim() || undefined,
           avatar_url: finalAvatarUrl || undefined,
         }),
@@ -161,18 +159,11 @@ export default function EditProfileForm({ profile, email, userId }: {
           className="input min-h-[44px]" placeholder="Optional" />
       </div>
 
-      {/* Phone + WhatsApp */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="text-sm font-medium text-gray-700 block mb-1">Phone</label>
-          <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-            className="input min-h-[44px]" placeholder="Optional" />
-        </div>
-        <div>
-          <label className="text-sm font-medium text-gray-700 block mb-1">WhatsApp Number</label>
-          <input type="tel" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)}
-            className="input min-h-[44px]" placeholder="+971501234567" />
-        </div>
+      {/* Phone */}
+      <div>
+        <label className="text-sm font-medium text-gray-700 block mb-1">Phone</label>
+        <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+          className="input min-h-[44px]" placeholder="Optional" />
       </div>
 
       {/* Country */}

@@ -23,7 +23,6 @@ export async function PATCH(req: NextRequest) {
   };
   if (company_name?.trim()) updatePayload.company_name = company_name.trim();
   if (phone?.trim()) updatePayload.phone = phone.trim();
-  if (whatsapp_number?.trim()) updatePayload.whatsapp_number = whatsapp_number.trim();
   if (country?.trim()) updatePayload.country = country.trim();
   if (avatar_url?.trim()) updatePayload.avatar_url = avatar_url.trim();
 
