@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, CheckCircle } from "lucide-react";
+import Link from "next/link";
+import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { createClient } from "@/lib/supabase/client";
 import { CATEGORIES, CONDITIONS } from "@/types";
@@ -11,6 +12,7 @@ import toast from "react-hot-toast";
 export default function SellPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const isVerified = useAuthStore((s) => s.isVerified);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -23,10 +25,12 @@ export default function SellPage() {
   const [condition, setCondition] = useState<"new" | "used" | "refurbished">("new");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!user) { toast.error("Please login first"); router.push("/login"); return; }
+    if (!isVerified) { setShowVerifyModal(true); return; }
     setLoading(true);
     try {
       const supabase = createClient();
@@ -139,6 +143,34 @@ export default function SellPage() {
           </button>
         </form>
       </div>
+
+      {/* Verification Required Modal */}
+      {showVerifyModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-xl">
+            <AlertCircle size={48} className="text-amber-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Verification Required</h2>
+            <p className="text-gray-500 text-sm mb-6">
+              Your account needs to be verified before you can publish listings.
+            </p>
+            <div className="flex flex-col gap-3">
+              <Link
+                href="/account"
+                className="btn-primary w-full min-h-[44px] flex items-center justify-center text-sm font-medium"
+              >
+                Complete Verification
+              </Link>
+              <button
+                type="button"
+                onClick={() => setShowVerifyModal(false)}
+                className="w-full min-h-[44px] rounded-lg border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

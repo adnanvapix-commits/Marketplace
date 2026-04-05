@@ -5,9 +5,12 @@ export async function updateSession(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!supabaseUrl || !supabaseKey ||
-      supabaseUrl === "your_supabase_project_url" ||
-      supabaseKey === "your_supabase_anon_key") {
+  if (
+    !supabaseUrl ||
+    !supabaseKey ||
+    supabaseUrl === "your_supabase_project_url" ||
+    supabaseKey === "your_supabase_anon_key"
+  ) {
     return NextResponse.next({ request });
   }
 
@@ -15,71 +18,129 @@ export async function updateSession(request: NextRequest) {
 
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
-      getAll() { return request.cookies.getAll(); },
+      getAll() {
+        return request.cookies.getAll();
+      },
       setAll(cookiesToSet: { name: string; value: string; options?: object }[]) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        cookiesToSet.forEach(({ name, value }) =>
+          request.cookies.set(name, value)
+        );
         supabaseResponse = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options as Parameters<typeof supabaseResponse.cookies.set>[2])
+          supabaseResponse.cookies.set(
+            name,
+            value,
+            options as Parameters<typeof supabaseResponse.cookies.set>[2]
+          )
         );
       },
     },
   });
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     const path = request.nextUrl.pathname;
 
-    // Skip admin routes — handled by admin layout
-    if (path.startsWith("/admin")) return supabaseResponse;
-
-    // Routes that require login only (no verification check)
-    const loginRequired = ["/sell", "/chat", "/profile", "/dashboard"];
-    const needsLogin = loginRequired.some((p) => path.startsWith(p));
-
-    if (needsLogin && !user) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      return NextResponse.redirect(url);
+    // 1. Auth guard — redirect authenticated users away from auth routes (Req 4.1, 4.2)
+    if (path === "/login" || path === "/register") {
+      if (user) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/home";
+        return NextResponse.redirect(url);
+      }
+      return supabaseResponse;
     }
 
-    // /sell and /dashboard also require verified + subscribed
-    const strictPaths = ["/sell", "/dashboard"];
-    const isStrict = strictPaths.some((p) => path.startsWith(p));
+    // 2. Admin protection — only admin role may access /admin/* (Req 13.12)
+    if (path.startsWith("/admin")) {
+      if (!user) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/home";
+        return NextResponse.redirect(url);
+      }
 
-    if (isStrict && user) {
-      const { data: profile } = await supabase
+      const { data: adminProfile } = await supabase
         .from("users")
-        .select("is_verified, is_subscribed, role")
+        .select("role")
         .eq("id", user.id)
         .single();
 
-      if (profile?.role === "admin") return supabaseResponse;
-
-      if (!profile?.is_verified) {
+      if (adminProfile?.role !== "admin") {
         const url = request.nextUrl.clone();
-        url.pathname = "/pending";
+        url.pathname = "/home";
         return NextResponse.redirect(url);
       }
 
-      if (!profile?.is_subscribed) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/subscribe";
-        return NextResponse.redirect(url);
-      }
+      return supabaseResponse;
     }
 
-    // /buy and /product — require login, but NOT verification
-    // (the search API handles access control for actual data)
-    const buyPaths = ["/buy", "/product"];
-    const isBuyPath = buyPaths.some((p) => path.startsWith(p));
+    // 3. Unauthenticated protection — login required routes (Req 5.7, 10.3)
+    const loginRequiredPrefixes = [
+      "/buy",
+      "/sell",
+      "/chat",
+      "/dashboard",
+      "/profile",
+    ];
+    const requiresLogin = loginRequiredPrefixes.some((p) =>
+      path.startsWith(p)
+    );
 
-    if (isBuyPath && !user) {
+    if (requiresLogin && !user) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       return NextResponse.redirect(url);
     }
 
+    // 4. Verification gating — authenticated but unverified users (Req 5.1–5.4)
+    const verificationGatedPrefixes = ["/buy", "/sell", "/chat", "/dashboard"];
+    const requiresVerification = verificationGatedPrefixes.some((p) =>
+      path.startsWith(p)
+    );
+
+    if (requiresVerification && user) {
+      let isVerified = false;
+
+      try {
+        const { data: profile, error } = await supabase
+          .from("users")
+          .select("is_verified")
+          .eq("id", user.id)
+          .single();
+
+        if (error) {
+          // Error handling: treat as unverified and redirect to /home (Req error handling)
+          const url = request.nextUrl.clone();
+          url.pathname = "/home";
+          const redirectResponse = NextResponse.redirect(url);
+          return redirectResponse;
+        }
+
+        isVerified = profile?.is_verified ?? false;
+      } catch {
+        // Query failed — treat as unverified, redirect to /home
+        const url = request.nextUrl.clone();
+        url.pathname = "/home";
+        return NextResponse.redirect(url);
+      }
+
+      if (!isVerified) {
+        // Set cookie so client can show toast (Req 5.5)
+        const url = request.nextUrl.clone();
+        url.pathname = "/home";
+        const redirectResponse = NextResponse.redirect(url);
+        redirectResponse.cookies.set("verification_redirect", "1", {
+          path: "/",
+          maxAge: 30,
+        });
+        return redirectResponse;
+      }
+
+      // 5. Verified users — allow through (Req 5.6)
+      return supabaseResponse;
+    }
   } catch {
     return supabaseResponse;
   }

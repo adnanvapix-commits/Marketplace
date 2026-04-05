@@ -1,7 +1,10 @@
 export interface User {
   id: string;
   email: string;
+  full_name?: string;
+  username?: string;
   role: "buyer" | "seller" | "admin";
+  roles?: string[];
   is_verified: boolean;
   is_subscribed: boolean;
   is_blocked: boolean;
@@ -9,7 +12,9 @@ export interface User {
   verification_status: "pending" | "approved" | "rejected";
   company_name?: string;
   phone?: string;
+  whatsapp_number?: string;
   country?: string;
+  avatar_url?: string;
   created_at: string;
 }
 

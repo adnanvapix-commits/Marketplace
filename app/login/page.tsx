@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, Eye, EyeOff, ShoppingBag, Store, CheckSquare, Square } from "lucide-react";
+import { Building2, Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { generateAvatarDataUri } from "@/lib/utils/generateAvatar";
 import toast from "react-hot-toast";
 
 const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
+const WHATSAPP_REGEX = /^\+?[1-9]\d{6,14}$/;
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,28 +16,26 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
-  const [roles, setRoles] = useState<Set<"buyer" | "seller">>(new Set());
-  const [roleError, setRoleError] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [whatsappError, setWhatsappError] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [country, setCountry] = useState("UAE");
   const [loading, setLoading] = useState(false);
 
-  function toggleRole(r: "buyer" | "seller") {
-    setRoleError("");
-    setRoles((prev) => {
-      const next = new Set(prev);
-      if (next.has(r)) next.delete(r); else next.add(r);
-      return next;
-    });
+  function validateWhatsapp(value: string): boolean {
+    if (!WHATSAPP_REGEX.test(value)) {
+      setWhatsappError("Enter a valid WhatsApp number (e.g. +971501234567)");
+      return false;
+    }
+    setWhatsappError("");
+    return true;
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (isSignup && roles.size === 0) {
-      setRoleError("Please select at least one option (Buy or Sell).");
-      return;
-    }
+
+    if (isSignup && !validateWhatsapp(whatsapp)) return;
+
     setLoading(true);
     const supabase = createClient();
     try {
@@ -43,16 +43,21 @@ export default function LoginPage() {
         const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
         if (data.user) {
-          const primaryRole = roles.has("seller") ? "seller" : "buyer";
           await supabase.from("users").upsert({
-            id: data.user.id, email,
-            role: primaryRole, roles: Array.from(roles),
-            company_name: companyName, phone, country,
-            verification_status: "pending", is_verified: false,
+            id: data.user.id,
+            email,
+            full_name: fullName,
+            whatsapp_number: whatsapp,
+            roles: ["buyer", "seller"],
+            role: "buyer",
+            is_verified: false,
+            verification_status: "pending",
+            avatar_url: generateAvatarDataUri(fullName, email),
+            ...(companyName ? { company_name: companyName } : {}),
           });
         }
-        toast.success("Account created! Awaiting admin verification.");
-        router.push("/pending");
+        toast.success("Account created! Welcome to B2B Market.");
+        router.push("/home");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -63,15 +68,15 @@ export default function LoginPage() {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const { data: profile } = await supabase
-            .from("users").select("is_verified, is_subscribed, role").eq("id", user.id).single();
+            .from("users")
+            .select("role")
+            .eq("id", user.id)
+            .single();
+
           if (profile?.role === "admin" || user.email === adminEmail) {
             window.location.href = "/admin";
-          } else if (!profile?.is_verified) {
-            window.location.href = "/pending";
-          } else if (!profile?.is_subscribed) {
-            window.location.href = "/subscribe";
           } else {
-            window.location.href = "/dashboard";
+            window.location.href = "/home";
           }
         }
       }
@@ -100,49 +105,50 @@ export default function LoginPage() {
 
             {isSignup && (
               <div>
-                <label className="text-sm font-medium text-gray-700 block mb-2">
-                  I want to <span className="text-red-400">*</span>
+                <label className="text-sm font-medium text-gray-700 block mb-1">
+                  Full Name <span className="text-red-400">*</span>
                 </label>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  {([["buyer", "Buy Products", "Browse & purchase listings", ShoppingBag],
-                     ["seller", "Sell Products", "List & sell your inventory", Store]] as const).map(
-                    ([r, label, desc, Icon]) => (
-                      <button key={r} type="button" onClick={() => toggleRole(r)}
-                        className={`flex-1 flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
-                          roles.has(r) ? "border-primary bg-primary/5" : "border-gray-200 hover:border-gray-300"
-                        }`}>
-                        <span className="shrink-0">
-                          {roles.has(r) ? <CheckSquare size={20} className="text-primary" /> : <Square size={20} className="text-gray-300" />}
-                        </span>
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <Icon size={14} className="text-primary" />
-                            <span className={`text-sm font-semibold ${roles.has(r) ? "text-primary" : "text-gray-700"}`}>{label}</span>
-                          </div>
-                          <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
-                        </div>
-                      </button>
-                    ))}
-                </div>
-                <p className="text-xs text-gray-400 mt-2">You can choose both options.</p>
-                {roleError && <p className="text-xs text-red-500 mt-1 font-medium">{roleError}</p>}
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="input min-h-[44px]"
+                  required
+                />
               </div>
             )}
 
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-1">Email <span className="text-red-400">*</span></label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                className="input min-h-[44px]" required />
+              <label className="text-sm font-medium text-gray-700 block mb-1">
+                Email <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input min-h-[44px]"
+                required
+              />
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-1">Password <span className="text-red-400">*</span></label>
+              <label className="text-sm font-medium text-gray-700 block mb-1">
+                Password <span className="text-red-400">*</span>
+              </label>
               <div className="relative">
-                <input type={showPass ? "text" : "password"} value={password}
+                <input
+                  type={showPass ? "text" : "password"}
+                  value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input min-h-[44px] pr-10" required minLength={6} />
-                <button type="button" onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 p-1">
+                  className="input min-h-[44px] pr-10"
+                  required
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass(!showPass)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 p-1"
+                >
                   {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
@@ -152,40 +158,56 @@ export default function LoginPage() {
               <>
                 <div>
                   <label className="text-sm font-medium text-gray-700 block mb-1">
-                    Company Name <span className="text-red-400">*</span>
+                    WhatsApp Number <span className="text-red-400">*</span>
                   </label>
-                  <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)}
-                    className="input min-h-[44px]" required />
+                  <input
+                    type="tel"
+                    value={whatsapp}
+                    onChange={(e) => {
+                      setWhatsapp(e.target.value);
+                      if (whatsappError) validateWhatsapp(e.target.value);
+                    }}
+                    placeholder="+971501234567"
+                    className="input min-h-[44px]"
+                    required
+                  />
+                  {whatsappError && (
+                    <p className="text-xs text-red-500 mt-1 font-medium">{whatsappError}</p>
+                  )}
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 block mb-1">
-                      Phone <span className="text-red-400">*</span>
-                    </label>
-                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-                      className="input min-h-[44px]" required />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 block mb-1">
-                      Country <span className="text-red-400">*</span>
-                    </label>
-                    <input type="text" value={country} onChange={(e) => setCountry(e.target.value)}
-                      className="input min-h-[44px]" required />
-                  </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">
+                    Company / Shop Name
+                  </label>
+                  <input
+                    type="text"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    className="input min-h-[44px]"
+                  />
                 </div>
               </>
             )}
 
-            <button type="submit" disabled={loading}
-              className="btn-primary w-full min-h-[48px] text-base mt-1">
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full min-h-[48px] text-base mt-1"
+            >
               {loading ? "Please wait..." : isSignup ? "Create Account" : "Sign In"}
             </button>
           </form>
 
           <p className="text-center text-sm text-gray-500 mt-5">
             {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
-            <button onClick={() => { setIsSignup(!isSignup); setRoles(new Set()); setRoleError(""); setCountry("UAE"); }}
-              className="text-primary hover:underline font-medium">
+            <button
+              onClick={() => {
+                setIsSignup(!isSignup);
+                setWhatsappError("");
+              }}
+              className="text-primary hover:underline font-medium"
+            >
               {isSignup ? "Sign In" : "Register"}
             </button>
           </p>

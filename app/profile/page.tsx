@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { PlusCircle, User, Pencil } from "lucide-react";
 import DeleteProductButton from "./DeleteProductButton";
+import VerificationBadge from "@/components/VerificationBadge";
 import type { Product } from "@/types";
 
 export default async function ProfilePage() {
@@ -53,9 +54,7 @@ export default async function ProfilePage() {
                   {r}
                 </span>
               ))}
-              {profile?.is_verified && (
-                <span className="text-xs px-2.5 py-1 rounded-full bg-green-100 text-green-700 font-medium">✓ Verified</span>
-              )}
+              <VerificationBadge isVerified={profile?.is_verified ?? false} />
               {profile?.is_subscribed && (
                 <span className="text-xs px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 font-medium">✓ Subscribed</span>
               )}

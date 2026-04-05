@@ -3,28 +3,23 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShoppingBag, PlusCircle, MessageCircle, User, LogOut, Menu, X } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { Home, ShoppingBag, PlusCircle, MessageCircle, User, LogOut, Menu, X } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
-import toast from "react-hot-toast";
 
 export default function Navbar() {
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
   const role = useAuthStore((s) => s.role);
-  const setUser = useAuthStore((s) => s.setUser);
-  const setRole = useAuthStore((s) => s.setRole);
+  const isVerified = useAuthStore((s) => s.isVerified);
   const [open, setOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
-  // Prevent showing auth UI before client hydration
   useEffect(() => { setHydrated(true); }, []);
 
   const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@gmail.com";
   const isAdmin = role === "admin" || user?.email === ADMIN_EMAIL;
   const isLoggedIn = hydrated && !!user;
 
-  // Hide on admin pages
   if (pathname.startsWith("/admin")) return null;
 
   const active = (path: string) =>
@@ -32,16 +27,6 @@ export default function Navbar() {
 
   const linkCls = (path: string) =>
     `flex items-center gap-1.5 text-sm font-medium whitespace-nowrap transition-colors ${active(path)}`;
-
-  async function handleLogout() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    setUser(null);
-    setRole(null);
-    setOpen(false);
-    toast.success("Logged out");
-    window.location.href = "/";
-  }
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
@@ -53,15 +38,24 @@ export default function Navbar() {
 
         {/* Desktop */}
         <div className="hidden md:flex items-center gap-1">
+          <Link href="/home" className={linkCls("/home")}>
+            <Home size={16} className="shrink-0" /> Home
+          </Link>
+
           <Link href="/buy" className={linkCls("/buy")}>
             <ShoppingBag size={16} className="shrink-0" /> Buy
           </Link>
 
           {isLoggedIn ? (
             <>
-              <Link href="/sell" className={linkCls("/sell")}>
-                <PlusCircle size={16} className="shrink-0" /> Sell
-              </Link>
+              <div className="relative">
+                <Link href="/sell" className={linkCls("/sell")}>
+                  <PlusCircle size={16} className="shrink-0" /> Sell
+                  {!isVerified && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+                  )}
+                </Link>
+              </div>
               <Link href="/chat" className={linkCls("/chat")}>
                 <MessageCircle size={16} className="shrink-0" /> Chat
               </Link>
@@ -99,13 +93,21 @@ export default function Navbar() {
       {open && (
         <div className="md:hidden border-t border-gray-100 bg-white shadow-lg">
           <div className="px-4 py-3 flex flex-col gap-0.5">
+            <MobileLink href="/home" icon={<Home size={18} />} label="Home"
+              active={pathname === "/home"} onClick={() => setOpen(false)} />
+
             <MobileLink href="/buy" icon={<ShoppingBag size={18} />} label="Buy"
               active={pathname === "/buy"} onClick={() => setOpen(false)} />
 
             {isLoggedIn ? (
               <>
-                <MobileLink href="/sell" icon={<PlusCircle size={18} />} label="Sell"
-                  active={pathname === "/sell"} onClick={() => setOpen(false)} />
+                <div className="relative">
+                  <MobileLink href="/sell" icon={<PlusCircle size={18} />} label="Sell"
+                    active={pathname === "/sell"} onClick={() => setOpen(false)} />
+                  {!isVerified && (
+                    <span className="absolute top-2 right-3 w-2 h-2 bg-red-500 rounded-full" />
+                  )}
+                </div>
                 <MobileLink href="/chat" icon={<MessageCircle size={18} />} label="Chat"
                   active={pathname === "/chat"} onClick={() => setOpen(false)} />
                 <MobileLink

@@ -3,12 +3,16 @@ import { createClient } from "@/lib/supabase/client";
 export interface AdminUser {
   id: string;
   email: string;
+  full_name?: string;
+  username?: string;
   role: string;
   is_verified: boolean;
   verification_status: "pending" | "approved" | "rejected";
   is_subscribed: boolean;
   subscription_expiry: string | null;
   is_blocked: boolean;
+  company_name?: string;
+  whatsapp_number?: string;
   created_at: string;
 }
 
@@ -62,7 +66,7 @@ export async function fetchAdminUsers(search = ""): Promise<AdminUser[]> {
   const supabase = createClient();
   let q = supabase
     .from("users")
-    .select("id, email, role, is_subscribed, subscription_expiry, is_blocked, created_at")
+    .select("id, email, full_name, username, role, is_verified, verification_status, is_subscribed, subscription_expiry, is_blocked, company_name, whatsapp_number, created_at")
     .order("created_at", { ascending: false });
   if (search.trim()) q = q.ilike("email", `%${search.trim()}%`);
   const { data, error } = await q;
