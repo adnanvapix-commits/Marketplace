@@ -8,6 +8,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   const setUser = useAuthStore((s) => s.setUser);
   const setRole = useAuthStore((s) => s.setRole);
   const setIsVerified = useAuthStore((s) => s.setIsVerified);
+  const setHydrated = useAuthStore((s) => s.setHydrated);
   const setUserRole = useAuthStore((s) => s.setUserRole);
   const setHasCompletedProfile = useAuthStore((s) => s.setHasCompletedProfile);
 
@@ -36,17 +37,14 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
           setIsVerified(false);
           setHasCompletedProfile(false);
         }
+
+        // Mark store as hydrated after first auth resolution
+        setHydrated(true);
       }
     );
 
-    // Check for verification redirect cookie and dispatch event for home page
-    if (typeof document !== "undefined" && document.cookie.includes("verification_redirect=1")) {
-      window.dispatchEvent(new Event("verificationRedirect"));
-      document.cookie = "verification_redirect=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    }
-
     return () => subscription.unsubscribe();
-  }, [setUser, setRole, setIsVerified, setUserRole, setHasCompletedProfile]);
+  }, [setUser, setRole, setIsVerified, setHydrated, setUserRole, setHasCompletedProfile]);
 
   return <>{children}</>;
 }
