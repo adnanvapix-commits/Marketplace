@@ -36,6 +36,11 @@ export default function ChatWindow({ currentUserId, otherUserId, otherUserName, 
     isAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
   }
 
+  // Scroll to bottom on initial load
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "instant" });
+  }, []);
+
   // Only auto-scroll when a NEW message arrives AND user is already at bottom
   useEffect(() => {
     const newCount = messages.length;
