@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { Send, ArrowLeft, Loader2, MessageCircle, ImagePlus, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { createClient } from "@/lib/supabase/client";
 import { uploadImage } from "@/lib/cloudinary";
 import type { Message } from "@/types";
 import toast from "react-hot-toast";
@@ -24,7 +23,6 @@ export default function ChatWindow({ currentUserId, otherUserId, productId, prod
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const supabase = createClient();
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -32,22 +30,20 @@ export default function ChatWindow({ currentUserId, otherUserId, productId, prod
 
   useEffect(() => {
     async function load() {
-      const { data, error } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("product_id", productId)
-        .or(
-          `and(sender_id.eq.${currentUserId},receiver_id.eq.${otherUserId}),` +
-          `and(sender_id.eq.${otherUserId},receiver_id.eq.${currentUserId})`
-        )
-        .order("created_at", { ascending: true });
-      if (error) { console.error("fetch messages error:", error.message); return; }
-      if (data) setMessages(data as Message[]);
+      try {
+        const res = await fetch(
+          `/api/chat/messages?productId=${productId}&otherUserId=${otherUserId}`
+        );
+        if (!res.ok) return;
+        const { messages: data } = await res.json();
+        if (data) setMessages(data);
+      } catch (err) {
+        console.error("fetch messages error:", err);
+      }
     }
     load();
     const interval = setInterval(load, 3000);
     return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId, currentUserId, otherUserId]);
 
   function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -74,23 +70,25 @@ export default function ChatWindow({ currentUserId, otherUserId, productId, prod
       // Upload image if selected
       if (imageFile) {
         const imageUrl = await uploadImage(imageFile);
-        // Append image URL to message — rendered as image in UI
         messageText = messageText ? `${messageText}\n[img]${imageUrl}[/img]` : `[img]${imageUrl}[/img]`;
         clearImage();
       }
 
       setText("");
 
-      const { error } = await supabase.from("messages").insert({
-        sender_id: currentUserId,
-        receiver_id: otherUserId,
-        product_id: productId,
-        message: messageText,
+      const res = await fetch("/api/chat/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          receiverId: otherUserId,
+          productId,
+          message: messageText,
+        }),
       });
 
-      if (error) {
-        console.error("send error:", error.message, error.code);
-        toast.error(error.message);
+      if (!res.ok) {
+        const err = await res.json();
+        toast.error(err.error ?? "Failed to send");
       }
     } catch (err) {
       console.error("send error:", err);
