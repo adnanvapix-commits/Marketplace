@@ -102,15 +102,15 @@ export default function ChatWindow({ currentUserId, otherUserId, otherUserName, 
   // Filter contact info from text only — preserve [img] tags
   function sanitizeMessage(msg: string): string {
     // Split on [img]...[/img] tags, sanitize only text parts
-    return msg.replace(/(\[img\].*?\[\/img\])|([^\[]+|\[[^\]]*\])/gs, (match, imgTag, textPart) => {
-      if (imgTag) return imgTag; // keep image tags untouched
-      if (!textPart) return match;
-      return textPart
+    const parts = msg.split(/(\[img\][\s\S]*?\[\/img\])/);
+    return parts.map((part) => {
+      if (part.startsWith("[img]")) return part; // keep image tags untouched
+      return part
         .replace(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g, "[contact hidden]")
         .replace(/(\+?\d[\d\s\-().]{7,}\d)/g, "[contact hidden]")
         .replace(/wa\.me\/\S+/gi, "[contact hidden]")
         .replace(/whatsapp[:\s]+\S+/gi, "[contact hidden]");
-    });
+    }).join("");
   }
 
   // Render message — detect image tags
