@@ -36,15 +36,27 @@ export default async function ChatPage({
     }
   }
 
-  // Get product title
-  const { data: product } = productId
-    ? await supabase.from("products").select("title").eq("id", productId).single()
-    : { data: null };
+  // Get product title and other user's name in parallel
+  const [productRes, otherUserRes] = await Promise.all([
+    productId
+      ? supabase.from("products").select("title").eq("id", productId).single()
+      : Promise.resolve({ data: null }),
+    supabase.from("users").select("full_name, company_name, email").eq("id", userId).single(),
+  ]);
+
+  const product = productRes.data;
+  const otherUser = otherUserRes.data;
+  const otherUserName =
+    otherUser?.full_name ||
+    otherUser?.company_name ||
+    otherUser?.email?.split("@")[0] ||
+    "User";
 
   return (
     <ChatWindow
       currentUserId={user.id}
       otherUserId={userId}
+      otherUserName={otherUserName}
       productId={productId ?? ""}
       productTitle={product?.title ?? ""}
       initialMessages={initialMessages}

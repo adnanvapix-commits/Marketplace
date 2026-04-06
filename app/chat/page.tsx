@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { MessageCircle, ChevronRight } from "lucide-react";
@@ -18,8 +19,9 @@ export default async function ChatInboxPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Use server client — has session, respects RLS
-  const { data: messages } = await supabase
+  const db = createAdminClient();
+
+  const { data: messages } = await db
     .from("messages")
     .select("*, products(title)")
     .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
@@ -34,6 +36,20 @@ export default async function ChatInboxPage() {
     seen.add(key);
     return true;
   }) as ConversationRow[];
+
+  // Fetch names for all unique other users
+  const otherIds = [...new Set(conversations.map((m) =>
+    m.sender_id === user.id ? m.receiver_id : m.sender_id
+  ))];
+
+  const { data: userProfiles } = otherIds.length > 0
+    ? await db.from("users").select("id, full_name, company_name, email").in("id", otherIds)
+    : { data: [] };
+
+  const nameMap = new Map<string, string>();
+  (userProfiles ?? []).forEach((u: { id: string; full_name?: string; company_name?: string; email?: string }) => {
+    nameMap.set(u.id, u.full_name || u.company_name || u.email?.split("@")[0] || "User");
+  });
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-5 sm:py-8">
@@ -52,17 +68,18 @@ export default async function ChatInboxPage() {
         <div className="space-y-2">
           {conversations.map((m) => {
             const otherId = m.sender_id === user.id ? m.receiver_id : m.sender_id;
+            const otherName = nameMap.get(otherId) ?? "User";
+            const initials = otherName.slice(0, 2).toUpperCase();
             return (
               <Link key={`${otherId}-${m.product_id}`}
                 href={`/chat/${otherId}?product=${m.product_id}`}
                 className="card p-4 flex items-center gap-4 hover:shadow-md transition-shadow active:scale-[0.99]">
                 <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0">
-                  {otherId.slice(0, 2).toUpperCase()}
+                  {initials}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-800 truncate text-sm">
-                    {m.products?.title ?? "Product"}
-                  </p>
+                  <p className="font-medium text-gray-800 truncate text-sm">{otherName}</p>
+                  <p className="text-xs text-gray-400 truncate">{m.products?.title ?? "Product"}</p>
                   <p className="text-xs text-gray-500 truncate mt-0.5">{m.message}</p>
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">

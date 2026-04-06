@@ -11,12 +11,13 @@ import toast from "react-hot-toast";
 interface Props {
   currentUserId: string;
   otherUserId: string;
+  otherUserName: string;
   productId: string;
   productTitle: string;
   initialMessages: Message[];
 }
 
-export default function ChatWindow({ currentUserId, otherUserId, productId, productTitle, initialMessages }: Props) {
+export default function ChatWindow({ currentUserId, otherUserId, otherUserName, productId, productTitle, initialMessages }: Props) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -145,7 +146,7 @@ export default function ChatWindow({ currentUserId, otherUserId, productId, prod
           <ArrowLeft size={20} />
         </Link>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-800 text-sm truncate">{otherUserId.slice(0, 8)}...</p>
+          <p className="font-semibold text-gray-800 text-sm truncate">{otherUserName}</p>
           {productTitle && <p className="text-xs text-gray-400 truncate">Re: {productTitle}</p>}
         </div>
       </div>
