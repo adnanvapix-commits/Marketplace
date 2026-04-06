@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient as createAdminSupabase } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
@@ -91,12 +92,24 @@ export async function updateSession(request: NextRequest) {
         return redirectResponse;
       }
 
-      // No cache — fetch from DB and cache result
+      // No cache — fetch from DB using service role for speed (bypasses RLS)
       try {
-        const { data: profile } = await supabase
-          .from("users").select("is_verified").eq("id", user.id).single();
+        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        let isVerified = false;
 
-        const isVerified = profile?.is_verified ?? false;
+        if (serviceKey && serviceKey !== "your_service_role_key_here") {
+          const adminDb = createAdminSupabase(supabaseUrl, serviceKey, {
+            auth: { autoRefreshToken: false, persistSession: false },
+          });
+          const { data: profile } = await adminDb
+            .from("users").select("is_verified").eq("id", user.id).single();
+          isVerified = profile?.is_verified ?? false;
+        } else {
+          // Fallback to anon client
+          const { data: profile } = await supabase
+            .from("users").select("is_verified").eq("id", user.id).single();
+          isVerified = profile?.is_verified ?? false;
+        }
 
         if (!isVerified) {
           const url = request.nextUrl.clone();
