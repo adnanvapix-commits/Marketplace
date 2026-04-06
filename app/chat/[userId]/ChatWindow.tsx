@@ -99,16 +99,18 @@ export default function ChatWindow({ currentUserId, otherUserId, otherUserName, 
     }
   }
 
-  // Filter out contact info (email, phone, WhatsApp) from messages
+  // Filter contact info from text only — preserve [img] tags
   function sanitizeMessage(msg: string): string {
-    return msg
-      // Remove email addresses
-      .replace(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g, "[contact hidden]")
-      // Remove phone numbers (various formats)
-      .replace(/(\+?\d[\d\s\-().]{7,}\d)/g, "[contact hidden]")
-      // Remove WhatsApp links
-      .replace(/wa\.me\/\S+/gi, "[contact hidden]")
-      .replace(/whatsapp[:\s]+\S+/gi, "[contact hidden]");
+    // Split on [img]...[/img] tags, sanitize only text parts
+    return msg.replace(/(\[img\].*?\[\/img\])|([^\[]+|\[[^\]]*\])/gs, (match, imgTag, textPart) => {
+      if (imgTag) return imgTag; // keep image tags untouched
+      if (!textPart) return match;
+      return textPart
+        .replace(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g, "[contact hidden]")
+        .replace(/(\+?\d[\d\s\-().]{7,}\d)/g, "[contact hidden]")
+        .replace(/wa\.me\/\S+/gi, "[contact hidden]")
+        .replace(/whatsapp[:\s]+\S+/gi, "[contact hidden]");
+    });
   }
 
   // Render message — detect image tags
