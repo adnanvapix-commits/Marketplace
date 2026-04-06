@@ -18,12 +18,9 @@ export default async function DashboardPage() {
   const userEmail = (user.email || "").toLowerCase();
   if (userEmail === adminEmail) redirect("/admin");
 
-  // Check role from DB
-  const { data: roleCheck } = await supabase
-    .from("users").select("role").eq("id", user.id).single();
-  if (roleCheck?.role === "admin") redirect("/admin");
-
-  const [profileRes, productsRes, chatsRes] = await Promise.all([
+  // Check role from DB — run in parallel with other queries
+  const [roleRes, profileRes, productsRes, chatsRes] = await Promise.all([
+    supabase.from("users").select("role").eq("id", user.id).single(),
     supabase.from("users").select("*").eq("id", user.id).single(),
     supabase.from("products").select("*").eq("user_id", user.id)
       .order("created_at", { ascending: false }).limit(6),
@@ -31,6 +28,8 @@ export default async function DashboardPage() {
       .select("product_id", { count: "exact", head: true })
       .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`),
   ]);
+
+  if (roleRes.data?.role === "admin") redirect("/admin");
 
   const profileData = profileRes.data;
   const products = (productsRes.data as Product[]) ?? [];
