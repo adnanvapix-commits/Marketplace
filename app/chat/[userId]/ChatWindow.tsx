@@ -53,7 +53,10 @@ export default function ChatWindow({ currentUserId, otherUserId, otherUserName, 
         );
         if (!res.ok) return;
         const { messages: data } = await res.json();
-        if (data) setMessages(data);
+        // Only update if message count changed to avoid unnecessary re-renders
+        if (data && data.length !== lastMessageCountRef.current) {
+          setMessages(data);
+        }
       } catch (err) {
         console.error("fetch messages error:", err);
       }

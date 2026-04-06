@@ -5,20 +5,42 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, ShoppingBag, PlusCircle, MessageCircle, User, LogOut, Menu, X } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
+import { createClient } from "@/lib/supabase/client";
 
 export default function Navbar() {
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
   const role = useAuthStore((s) => s.role);
-  const isVerified = useAuthStore((s) => s.isVerified);
+  const hydrated = useAuthStore((s) => s.hydrated);
   const [open, setOpen] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => { setHydrated(true); }, []);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@gmail.com";
   const isAdmin = role === "admin" || user?.email === ADMIN_EMAIL;
   const isLoggedIn = hydrated && !!user;
+
+  // Poll unread message count every 10s
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createClient();
+
+    async function fetchUnread() {
+      try {
+        const { count } = await supabase
+          .from("messages")
+          .select("id", { count: "exact", head: true })
+          .eq("receiver_id", user!.id)
+          .eq("is_read", false);
+        setUnreadCount(count ?? 0);
+      } catch {
+        // is_read column may not exist yet — ignore
+      }
+    }
+
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 10000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   if (pathname.startsWith("/admin")) return null;
 
@@ -48,17 +70,22 @@ export default function Navbar() {
 
           {isLoggedIn ? (
             <>
-              <div className="relative">
-                <Link href="/sell" className={linkCls("/sell")}>
-                  <PlusCircle size={16} className="shrink-0" /> Sell
-                  {!isVerified && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
-                  )}
-                </Link>
-              </div>
-              <Link href="/chat" className={linkCls("/chat")}>
-                <MessageCircle size={16} className="shrink-0" /> Chat
+              <Link href="/sell" className={linkCls("/sell")}>
+                <PlusCircle size={16} className="shrink-0" /> Sell
               </Link>
+
+              {/* Chat with unread badge */}
+              <div className="relative">
+                <Link href="/chat" className={linkCls("/chat")}>
+                  <MessageCircle size={16} className="shrink-0" /> Chat
+                </Link>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </div>
+
               <Link href={isAdmin ? "/admin" : "/dashboard"}
                 className={linkCls(isAdmin ? "/admin" : "/dashboard")}>
                 <User size={16} className="shrink-0" />
@@ -101,15 +128,20 @@ export default function Navbar() {
 
             {isLoggedIn ? (
               <>
+                <MobileLink href="/sell" icon={<PlusCircle size={18} />} label="Sell"
+                  active={pathname === "/sell"} onClick={() => setOpen(false)} />
+
+                {/* Chat with unread badge — mobile */}
                 <div className="relative">
-                  <MobileLink href="/sell" icon={<PlusCircle size={18} />} label="Sell"
-                    active={pathname === "/sell"} onClick={() => setOpen(false)} />
-                  {!isVerified && (
-                    <span className="absolute top-2 right-3 w-2 h-2 bg-red-500 rounded-full" />
+                  <MobileLink href="/chat" icon={<MessageCircle size={18} />} label="Chat"
+                    active={pathname === "/chat"} onClick={() => setOpen(false)} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-2 right-3 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
                   )}
                 </div>
-                <MobileLink href="/chat" icon={<MessageCircle size={18} />} label="Chat"
-                  active={pathname === "/chat"} onClick={() => setOpen(false)} />
+
                 <MobileLink
                   href={isAdmin ? "/admin" : "/dashboard"}
                   icon={<User size={18} />}
