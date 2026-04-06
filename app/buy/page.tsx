@@ -148,16 +148,9 @@ function BuyPageInner() {
 
           {/* Loading skeleton */}
           {loading && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="flex flex-col gap-2">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="card animate-pulse">
-                  <div className="aspect-[4/3] bg-gray-200" />
-                  <div className="p-3 space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-3/4" />
-                    <div className="h-3 bg-gray-200 rounded w-1/2" />
-                    <div className="h-3 bg-gray-200 rounded w-2/3" />
-                  </div>
-                </div>
+                <div key={i} className="card animate-pulse h-16" />
               ))}
             </div>
           )}
@@ -210,7 +203,7 @@ function BuyPageInner() {
                   <button onClick={clearAll} className="btn-outline text-sm mt-4">Clear Filters</button>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div className="flex flex-col gap-2">
                   {products.map((p) => <ProductCard key={p.id} product={p} />)}
                 </div>
               )}
