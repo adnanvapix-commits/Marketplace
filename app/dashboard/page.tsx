@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ShoppingBag, MessageCircle, CreditCard,
   PlusCircle, CheckCircle, Clock, XCircle, User,
@@ -42,8 +43,13 @@ export default async function DashboardPage() {
 
       {/* Profile header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-          <User size={22} />
+        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 overflow-hidden">
+          {profileData?.avatar_url ? (
+            <Image src={profileData.avatar_url} alt="Avatar" width={56} height={56}
+              className="object-cover w-full h-full rounded-full" />
+          ) : (
+            <User size={22} />
+          )}
         </div>
         <div className="min-w-0">
           <h1 className="text-lg sm:text-xl font-bold text-gray-800 truncate">

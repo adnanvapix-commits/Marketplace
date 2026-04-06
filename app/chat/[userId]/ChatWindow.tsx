@@ -100,6 +100,18 @@ export default function ChatWindow({ currentUserId, otherUserId, productId, prod
     }
   }
 
+  // Filter out contact info (email, phone, WhatsApp) from messages
+  function sanitizeMessage(msg: string): string {
+    return msg
+      // Remove email addresses
+      .replace(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g, "[contact hidden]")
+      // Remove phone numbers (various formats)
+      .replace(/(\+?\d[\d\s\-().]{7,}\d)/g, "[contact hidden]")
+      // Remove WhatsApp links
+      .replace(/wa\.me\/\S+/gi, "[contact hidden]")
+      .replace(/whatsapp[:\s]+\S+/gi, "[contact hidden]");
+  }
+
   // Render message — detect image tags
   function renderMessage(msg: string) {
     const imgRegex = /\[img\](.*?)\[\/img\]/g;
@@ -155,7 +167,7 @@ export default function ChatWindow({ currentUserId, otherUserId, productId, prod
               <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm shadow-sm ${
                 isMine ? "bg-primary text-white rounded-br-sm" : "bg-white border border-gray-200 text-gray-800 rounded-bl-sm"
               }`}>
-                <div className="break-words">{renderMessage(msg.message)}</div>
+                <div className="break-words">{renderMessage(sanitizeMessage(msg.message))}</div>
                 <p className={`text-xs mt-1 ${isMine ? "text-blue-200" : "text-gray-400"}`}>
                   {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </p>
