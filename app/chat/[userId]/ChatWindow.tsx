@@ -24,9 +24,25 @@ export default function ChatWindow({ currentUserId, otherUserId, otherUserName, 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const lastMessageCountRef = useRef(initialMessages.length);
+  const isAtBottomRef = useRef(true);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
+  // Track if user is near the bottom
+  function handleScroll() {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const threshold = 80;
+    isAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+  }
+
+  // Only auto-scroll when a NEW message arrives AND user is already at bottom
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const newCount = messages.length;
+    if (newCount > lastMessageCountRef.current && isAtBottomRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+    lastMessageCountRef.current = newCount;
   }, [messages]);
 
   useEffect(() => {
@@ -154,7 +170,11 @@ export default function ChatWindow({ currentUserId, otherUserId, otherUserName, 
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50">
+      <div
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50"
+      >
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-gray-400">
             <MessageCircle size={44} className="mb-3 opacity-20" />
