@@ -142,8 +142,8 @@ export default function ChatWindow({ currentUserId, otherUserId, otherUserName, 
 
   return (
     <div className="flex flex-col min-h-screen md:min-h-0 md:h-[calc(100vh-4rem)] max-w-2xl mx-auto w-full">
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b bg-white shrink-0 shadow-sm">
+      {/* Header — sticky below navbar */}
+      <div className="flex items-center gap-3 px-4 py-3 border-b bg-white shrink-0 shadow-sm sticky top-16 z-10">
         <Link href="/chat" className="p-2 -ml-2 rounded-lg text-gray-500 hover:bg-gray-100 min-w-[40px] min-h-[40px] flex items-center justify-center">
           <ArrowLeft size={20} />
         </Link>
