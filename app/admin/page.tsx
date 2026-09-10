@@ -8,18 +8,18 @@ export const revalidate = 0;
 
 async function getStats() {
   const db = createAdminClient();
-  // All 4 counts in a single Promise.all — no sequential waiting
   const [users, products, messages, subscribed] = await Promise.all([
     db.from("users").select("id", { count: "exact", head: true }),
     db.from("products").select("id", { count: "exact", head: true }),
-    db.from("messages").select("id", { count: "exact", head: true }),
+    // Count distinct conversations: unique (sender_id, product_id) pairs
+    db.rpc("count_conversations"),
     db.from("users").select("id", { count: "exact", head: true }).eq("is_subscribed", true),
   ]);
   return {
-    users:      users.count      ?? 0,
-    products:   products.count   ?? 0,
-    messages:   messages.count   ?? 0,
-    subscribed: subscribed.count ?? 0,
+    users:         users.count      ?? 0,
+    products:      products.count   ?? 0,
+    conversations: (messages.data as number | null) ?? 0,
+    subscribed:    subscribed.count ?? 0,
   };
 }
 
@@ -29,7 +29,7 @@ export default async function AdminDashboard() {
   const cards = [
     { label: "Total Users",      value: stats.users,      icon: Users,         color: "bg-blue-50 text-blue-600",     href: "/admin/users" },
     { label: "Total Products",   value: stats.products,   icon: ShoppingBag,   color: "bg-green-50 text-green-600",   href: "/admin/products" },
-    { label: "Total Messages",   value: stats.messages,   icon: MessageCircle, color: "bg-purple-50 text-purple-600", href: "#" },
+    { label: "Conversations",   value: stats.conversations, icon: MessageCircle, color: "bg-purple-50 text-purple-600", href: "#" },
     { label: "Active Subs",      value: stats.subscribed, icon: CreditCard,    color: "bg-amber-50 text-amber-600",   href: "/admin/subscriptions" },
   ];
 

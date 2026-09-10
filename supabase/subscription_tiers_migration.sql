@@ -23,3 +23,17 @@ UPDATE public.users
   SET subscription_tier = 'beginner'
   WHERE is_subscribed = TRUE
     AND subscription_tier IS NULL;
+
+-- ============================================================
+-- RPC: count distinct conversations (unique sender+product pairs)
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.count_conversations()
+RETURNS bigint
+LANGUAGE sql
+SECURITY DEFINER
+AS $$
+  SELECT COUNT(*) FROM (
+    SELECT DISTINCT sender_id, product_id
+    FROM public.messages
+  ) AS distinct_conversations;
+$$;
