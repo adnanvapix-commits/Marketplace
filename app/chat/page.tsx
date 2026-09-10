@@ -48,12 +48,12 @@ export default async function ChatInboxPage() {
   }) as ConversationRow[];
 
   function getName(m: ConversationRow) {
-    const other = m.sender_id === user.id ? m.receiver : m.sender;
+    const other = m.sender_id === user!.id ? m.receiver : m.sender;
     return other?.full_name || other?.company_name || other?.email?.split("@")[0] || "User";
   }
 
   function getOtherId(m: ConversationRow) {
-    return m.sender_id === user.id ? m.receiver_id : m.sender_id;
+    return m.sender_id === user!.id ? m.receiver_id : m.sender_id;
   }
 
   return (
