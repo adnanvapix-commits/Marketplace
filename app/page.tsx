@@ -5,7 +5,6 @@ import {
 } from "lucide-react";
 import { CATEGORIES } from "@/types";
 import GuestCTA from "./GuestCTA";
-import { createClient } from "@/lib/supabase/server";
 
 const FEATURES = [
   {
@@ -43,10 +42,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   "Packaging": "📦",
 };
 
-export default async function LandingPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
+export default function LandingPage() {
   return (
     <div className="min-h-screen" style={{ background: "#FFFDF7" }}>
 
@@ -111,21 +107,12 @@ export default async function LandingPage() {
             >
               🏷️ Start Selling
             </Link>
-            {user ? (
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-1.5 text-primary text-sm font-medium hover:text-primary-dark transition-colors px-2"
-              >
-                Go to Dashboard <ArrowRight size={14} />
-              </Link>
-            ) : (
-              <Link
-                href="/login"
-                className="flex items-center gap-1.5 text-primary text-sm font-medium hover:text-primary-dark transition-colors px-2"
-              >
-                Create free account <ArrowRight size={14} />
-              </Link>
-            )}
+            <Link
+              href="/login"
+              className="flex items-center gap-1.5 text-primary text-sm font-medium hover:text-primary-dark transition-colors px-2"
+            >
+              Create free account <ArrowRight size={14} />
+            </Link>
           </div>
         </div>
       </section>
