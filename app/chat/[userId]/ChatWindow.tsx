@@ -67,7 +67,7 @@ export default function ChatWindow({ currentUserId, otherUserId, otherUserName, 
       }
     }
     load();
-    const interval = setInterval(load, 3000);
+    const interval = setInterval(load, 8000);
     return () => clearInterval(interval);
   }, [productId, currentUserId, otherUserId]);
 

@@ -19,22 +19,19 @@ export default async function DashboardPage() {
   const userEmail = (user.email || "").toLowerCase();
   if (userEmail === adminEmail) redirect("/admin");
 
-  // Check role from DB — run in parallel with other queries
-  const [roleRes, profileRes, productsRes, chatsRes] = await Promise.all([
-    supabase.from("users").select("role").eq("id", user.id).single(),
-    supabase.from("users").select("*").eq("id", user.id).single(),
+  // Single query for role + full profile (was 2 separate queries)
+  const [profileRes, productsRes] = await Promise.all([
+    supabase.from("users").select("*, role").eq("id", user.id).single(),
     supabase.from("products").select("*").eq("user_id", user.id)
       .order("created_at", { ascending: false }).limit(6),
-    supabase.from("messages")
-      .select("product_id", { count: "exact", head: true })
-      .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`),
   ]);
 
-  if (roleRes.data?.role === "admin") redirect("/admin");
-
   const profileData = profileRes.data;
+
+  // Redirect admin based on role from the single profile query
+  if (profileData?.role === "admin") redirect("/admin");
+
   const products = (productsRes.data as Product[]) ?? [];
-  const chatCount = chatsRes.count ?? 0;
   const subExpiry = profileData?.subscription_expiry ? new Date(profileData.subscription_expiry) : null;
   const subActive = profileData?.is_subscribed && subExpiry && subExpiry > new Date();
 
@@ -99,7 +96,7 @@ export default async function DashboardPage() {
 
         <div className="card p-3 sm:p-4">
           <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Chats</p>
-          <p className="text-2xl font-bold text-gray-800">{chatCount}</p>
+          <Link href="/chat" className="text-2xl font-bold text-gray-800 hover:text-primary transition-colors">→</Link>
         </div>
       </div>
 

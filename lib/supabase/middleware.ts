@@ -129,8 +129,8 @@ export async function updateSession(request: NextRequest) {
           return redirectResponse;
         }
 
-        // Cache verified for 5 minutes
-        supabaseResponse.cookies.set(`verified_${user.id}`, "1", { path: "/", maxAge: 300 });
+        // Cache verified for 30 minutes
+        supabaseResponse.cookies.set(`verified_${user.id}`, "1", { path: "/", maxAge: 1800 });
       } catch {
         // DB error — allow through, don't block
       }

@@ -12,6 +12,8 @@ interface ConversationRow {
   message: string;
   created_at: string;
   products?: { title: string } | null;
+  sender?: { full_name?: string; company_name?: string; email?: string } | null;
+  receiver?: { full_name?: string; company_name?: string; email?: string } | null;
 }
 
 export default async function ChatInboxPage() {
@@ -21,13 +23,21 @@ export default async function ChatInboxPage() {
 
   const db = createAdminClient();
 
+  // Single query: fetch latest message per conversation with user profiles joined
+  // Order by created_at desc, deduplicate in JS — but limit to 100 rows max to avoid full table scan
   const { data: messages } = await db
     .from("messages")
-    .select("*, products(title)")
+    .select(`
+      id, sender_id, receiver_id, product_id, message, created_at,
+      products(title),
+      sender:users!messages_sender_id_fkey(full_name, company_name, email),
+      receiver:users!messages_receiver_id_fkey(full_name, company_name, email)
+    `)
     .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(100);
 
-  // Deduplicate by (other_user + product)
+  // Deduplicate by (other_user + product) — keep first (most recent) per conversation
   const seen = new Set<string>();
   const conversations = (messages ?? []).filter((m: ConversationRow) => {
     const otherId = m.sender_id === user.id ? m.receiver_id : m.sender_id;
@@ -37,19 +47,14 @@ export default async function ChatInboxPage() {
     return true;
   }) as ConversationRow[];
 
-  // Fetch names for all unique other users
-  const otherIds = [...new Set(conversations.map((m) =>
-    m.sender_id === user.id ? m.receiver_id : m.sender_id
-  ))];
+  function getName(m: ConversationRow) {
+    const other = m.sender_id === user.id ? m.receiver : m.sender;
+    return other?.full_name || other?.company_name || other?.email?.split("@")[0] || "User";
+  }
 
-  const { data: userProfiles } = otherIds.length > 0
-    ? await db.from("users").select("id, full_name, company_name, email").in("id", otherIds)
-    : { data: [] };
-
-  const nameMap = new Map<string, string>();
-  (userProfiles ?? []).forEach((u: { id: string; full_name?: string; company_name?: string; email?: string }) => {
-    nameMap.set(u.id, u.full_name || u.company_name || u.email?.split("@")[0] || "User");
-  });
+  function getOtherId(m: ConversationRow) {
+    return m.sender_id === user.id ? m.receiver_id : m.sender_id;
+  }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-5 sm:py-8">
@@ -67,8 +72,8 @@ export default async function ChatInboxPage() {
       ) : (
         <div className="space-y-2">
           {conversations.map((m) => {
-            const otherId = m.sender_id === user.id ? m.receiver_id : m.sender_id;
-            const otherName = nameMap.get(otherId) ?? "User";
+            const otherId = getOtherId(m);
+            const otherName = getName(m);
             const initials = otherName.slice(0, 2).toUpperCase();
             return (
               <Link key={`${otherId}-${m.product_id}`}
