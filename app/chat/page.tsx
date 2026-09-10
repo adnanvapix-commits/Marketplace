@@ -39,7 +39,7 @@ export default async function ChatInboxPage() {
 
   // Deduplicate by (other_user + product) — keep first (most recent) per conversation
   const seen = new Set<string>();
-  const conversations = (messages ?? []).filter((m: ConversationRow) => {
+  const conversations = ((messages ?? []) as unknown as ConversationRow[]).filter((m: ConversationRow) => {
     const otherId = m.sender_id === user.id ? m.receiver_id : m.sender_id;
     const key = `${otherId}-${m.product_id}`;
     if (seen.has(key)) return false;
