@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, X, Loader2, ShoppingBag } from "lucide-react";
 import FilterSidebar, { DEFAULT_FILTERS, type FilterState } from "@/components/FilterSidebar";
 import ProductCard from "@/components/ProductCard";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import type { Product } from "@/types";
+
+// Shared in-memory cache (same instance as HomeClient if bundled together)
+const cache = new Map<string, { products: Product[]; count: number; totalPages: number; ts: number }>();
+const CACHE_TTL = 30_000;
 
 /* ── Inner component (needs useSearchParams inside Suspense) ── */
 function BuyPageInner() {
@@ -22,21 +26,19 @@ function BuyPageInner() {
   const [count, setCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [searched, setSearched] = useState(true); // always show products
-
-  // Debounce text inputs — 400ms delay
-  const debouncedQuery    = useDebounce(query, 400);
-  const debouncedBrand    = useDebounce(filters.brand, 400);
-  const debouncedLocation = useDebounce(filters.location, 400);
-
-  // Always fetch — empty query returns all products sorted A-Z
-  const hasAnyFilter = true;
-
+  const [searched, setSearched] = useState(true);
   const [error, setError] = useState("");
 
+  const debouncedQuery    = useDebounce(query, 300);
+  const debouncedBrand    = useDebounce(filters.brand, 300);
+  const debouncedLocation = useDebounce(filters.location, 300);
+  const abortRef = useRef<AbortController | null>(null);
+
   const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    setError("");
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setSearched(true);
 
     const params = new URLSearchParams();
@@ -52,8 +54,20 @@ function BuyPageInner() {
     params.set("sort", filters.sort);
     params.set("page", String(page));
 
+    const cacheKey = params.toString();
+    const cached = cache.get(cacheKey);
+    if (cached && Date.now() - cached.ts < CACHE_TTL) {
+      setProducts(cached.products);
+      setCount(cached.count);
+      setTotalPages(cached.totalPages);
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
     try {
-      const res = await fetch(`/api/products/search?${params.toString()}`);
+      const res = await fetch(`/api/products/search?${cacheKey}`, { signal: controller.signal });
       if (!res.ok) {
         const err = await res.json();
         setError(err.error ?? "Failed to fetch products");
@@ -62,15 +76,16 @@ function BuyPageInner() {
         return;
       }
       const data = await res.json();
+      cache.set(cacheKey, { products: data.products, count: data.count, totalPages: data.totalPages, ts: Date.now() });
       setProducts(data.products);
       setCount(data.count);
       setTotalPages(data.totalPages);
-    } catch {
-      setError("Network error. Please try again.");
+    } catch (e) {
+      if ((e as Error).name !== "AbortError") setError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
-  }, [debouncedQuery, debouncedBrand, debouncedLocation, filters, page, hasAnyFilter]);
+  }, [debouncedQuery, debouncedBrand, debouncedLocation, filters, page]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -149,8 +164,8 @@ function BuyPageInner() {
           {/* Loading skeleton */}
           {loading && (
             <div className="flex flex-col gap-2">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="card animate-pulse h-16" />
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="skeleton h-20 rounded-2xl" />
               ))}
             </div>
           )}

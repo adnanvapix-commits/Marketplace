@@ -10,7 +10,7 @@ export default async function AdminSubscriptionsPage() {
   const db = createAdminClient();
   const { data, error } = await db
     .from("users")
-    .select("id, email, role, is_verified, verification_status, is_subscribed, subscription_expiry, is_blocked, created_at")
+    .select("id, email, role, is_verified, verification_status, is_subscribed, subscription_expiry, subscription_tier, is_blocked, created_at")
     .order("is_subscribed", { ascending: false });
 
   if (error) console.error("[admin/subscriptions] fetch error:", error.message);

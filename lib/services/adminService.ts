@@ -9,6 +9,7 @@ export interface AdminUser {
   verification_status: "pending" | "approved" | "rejected";
   is_subscribed: boolean;
   subscription_expiry: string | null;
+  subscription_tier: "elite" | "expert" | "beginner" | null;
   is_blocked: boolean;
   company_name?: string;
   whatsapp_number?: string;
@@ -65,7 +66,7 @@ export async function fetchAdminUsers(search = ""): Promise<AdminUser[]> {
   const supabase = createClient();
   let q = supabase
     .from("users")
-    .select("id, email, full_name, role, is_verified, verification_status, is_subscribed, subscription_expiry, is_blocked, company_name, whatsapp_number, created_at")
+    .select("id, email, full_name, role, is_verified, verification_status, is_subscribed, subscription_expiry, subscription_tier, is_blocked, company_name, whatsapp_number, created_at")
     .order("created_at", { ascending: false });
   if (search.trim()) q = q.ilike("email", `%${search.trim()}%`);
   const { data, error } = await q;
@@ -77,21 +78,22 @@ export async function updateUserSubscription(
   userId: string,
   isSubscribed: boolean,
   expiryDate: string | null,
-  adminId: string
+  adminId: string,
+  tier?: "elite" | "expert" | "beginner" | null
 ): Promise<void> {
   const supabase = createClient();
-  const { error } = await supabase
-    .from("users")
-    .update({ is_subscribed: isSubscribed, subscription_expiry: expiryDate })
-    .eq("id", userId);
+  const updates: Record<string, unknown> = {
+    is_subscribed: isSubscribed,
+    subscription_expiry: expiryDate,
+  };
+  if (tier !== undefined) updates.subscription_tier = tier;
+  const { error } = await supabase.from("users").update(updates).eq("id", userId);
   if (error) throw new Error(error.message);
-
-  // Log the action
   await supabase.from("admin_logs").insert({
     admin_id: adminId,
     action: isSubscribed ? "activate_subscription" : "deactivate_subscription",
     target_user_id: userId,
-    details: { expiry: expiryDate },
+    details: { expiry: expiryDate, tier },
   });
 }
 

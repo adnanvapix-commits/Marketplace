@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, Suspense } from "react";
+import { useCallback, useEffect, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, X, Loader2, ShoppingBag, PlusCircle } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
@@ -10,6 +10,10 @@ import { useDebounce } from "@/lib/hooks/useDebounce";
 import VerificationBanner from "./VerificationBanner";
 import toast from "react-hot-toast";
 import type { Product } from "@/types";
+
+// Simple in-memory cache keyed by URL params string
+const cache = new Map<string, { products: Product[]; count: number; totalPages: number; ts: number }>();
+const CACHE_TTL = 30_000; // 30 s
 
 function HomeInner() {
   const router = useRouter();
@@ -29,13 +33,19 @@ function HomeInner() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const debouncedQuery    = useDebounce(query, 400);
-  const debouncedBrand    = useDebounce(filters.brand, 400);
-  const debouncedLocation = useDebounce(filters.location, 400);
+  const debouncedQuery    = useDebounce(query, 300);
+  const debouncedBrand    = useDebounce(filters.brand, 300);
+  const debouncedLocation = useDebounce(filters.location, 300);
+
+  // Abort controller ref — cancel in-flight requests when filters change
+  const abortRef = useRef<AbortController | null>(null);
 
   const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    setError("");
+    // Cancel previous fetch
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     const params = new URLSearchParams();
     if (debouncedQuery)    params.set("q", debouncedQuery);
     if (filters.category)  params.set("category", filters.category);
@@ -48,15 +58,43 @@ function HomeInner() {
     if (filters.minMoq)    params.set("minMoq", filters.minMoq);
     params.set("sort", filters.sort);
     params.set("page", String(page));
+
+    const cacheKey = params.toString();
+
+    // Serve from cache if fresh
+    const cached = cache.get(cacheKey);
+    if (cached && Date.now() - cached.ts < CACHE_TTL) {
+      setProducts(cached.products);
+      setCount(cached.count);
+      setTotalPages(cached.totalPages);
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
     try {
-      const res = await fetch(`/api/products/search?${params.toString()}`);
-      if (!res.ok) { const e = await res.json(); setError(e.error ?? "Failed"); setProducts([]); return; }
+      const res = await fetch(`/api/products/search?${cacheKey}`, {
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        const e = await res.json();
+        setError(e.error ?? "Failed");
+        setProducts([]);
+        return;
+      }
+
       const data = await res.json();
+      cache.set(cacheKey, { products: data.products, count: data.count, totalPages: data.totalPages, ts: Date.now() });
       setProducts(data.products);
       setCount(data.count);
       setTotalPages(data.totalPages);
-    } catch { setError("Network error. Please try again."); }
-    finally { setLoading(false); }
+    } catch (e) {
+      if ((e as Error).name !== "AbortError") setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }, [debouncedQuery, debouncedBrand, debouncedLocation, filters, page]);
 
   useEffect(() => { setPage(1); }, [
@@ -85,7 +123,6 @@ function HomeInner() {
     router.push("/sell");
   }
 
-  // Wait for auth to resolve before showing verification-dependent UI
   const showBanner = hydrated && isLoggedIn && !isVerified;
 
   return (
@@ -115,18 +152,14 @@ function HomeInner() {
           </div>
         </div>
 
-        {/* Buy / Sell buttons */}
+        {/* Buy / Sell */}
         <div className="flex gap-3 mb-5">
-          <button
-            onClick={handleBuy}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors"
-          >
+          <button onClick={handleBuy}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors">
             <ShoppingBag size={16} /> Buy
           </button>
-          <button
-            onClick={handleSell}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-primary text-primary text-sm font-semibold hover:bg-primary/5 transition-colors"
-          >
+          <button onClick={handleSell}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-primary text-primary text-sm font-semibold hover:bg-primary/5 transition-colors">
             <PlusCircle size={16} /> Sell
           </button>
         </div>
@@ -140,10 +173,11 @@ function HomeInner() {
           />
 
           <div className="flex-1 min-w-0">
+            {/* Skeleton */}
             {loading && (
               <div className="flex flex-col gap-2">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="card animate-pulse h-16" />
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="skeleton h-20 rounded-2xl" />
                 ))}
               </div>
             )}
@@ -204,18 +238,18 @@ function HomePagination({ currentPage, totalPages, onPageChange }: {
   return (
     <div className="flex items-center justify-center gap-1.5 mt-8 flex-wrap">
       <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1}
-        className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-40 text-sm">‹</button>
+        className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl border border-cream-200 hover:bg-cream-100 disabled:opacity-40 text-sm">‹</button>
       {pages.map((p, idx) => (
         <span key={p} className="flex items-center gap-1.5">
           {pages[idx - 1] && p - pages[idx - 1] > 1 && <span className="text-gray-400 text-sm">…</span>}
           <button onClick={() => onPageChange(p)}
-            className={`min-w-[40px] min-h-[40px] rounded-lg text-sm font-medium transition-colors ${p === currentPage ? "bg-primary text-white" : "border border-gray-200 hover:bg-gray-100"}`}>
+            className={`min-w-[40px] min-h-[40px] rounded-xl text-sm font-medium transition-colors ${p === currentPage ? "bg-primary text-white" : "border border-cream-200 hover:bg-cream-100"}`}>
             {p}
           </button>
         </span>
       ))}
       <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages}
-        className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-40 text-sm">›</button>
+        className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl border border-cream-200 hover:bg-cream-100 disabled:opacity-40 text-sm">›</button>
     </div>
   );
 }
