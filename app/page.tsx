@@ -1,18 +1,10 @@
 import Link from "next/link";
 import {
   Search, ShieldCheck, Building2, Globe, ArrowRight,
-  Sparkles, TrendingUp, Users, Package, Star,
-  CheckCircle2, Zap, Lock,
+  Sparkles, TrendingUp, Users, CheckCircle2, Zap, Lock,
 } from "lucide-react";
 import { CATEGORIES } from "@/types";
 import GuestCTA from "./GuestCTA";
-
-const STATS = [
-  { value: "12,000+", label: "Verified Products", icon: Package },
-  { value: "3,500+", label: "Active Businesses", icon: Building2 },
-  { value: "80+", label: "Countries", icon: Globe },
-  { value: "99%", label: "Satisfaction Rate", icon: Star },
-];
 
 const FEATURES = [
   {
@@ -34,27 +26,6 @@ const FEATURES = [
     icon: Lock,
     title: "Secure & Private",
     desc: "Your data and business details are protected with enterprise-grade security.",
-  },
-];
-
-const TESTIMONIALS = [
-  {
-    name: "Ahmed Al-Rashidi",
-    company: "Gulf Trading Co.",
-    text: "BULKORA transformed how we source products. The verified network means we only deal with trusted suppliers.",
-    rating: 5,
-  },
-  {
-    name: "Sarah Chen",
-    company: "Pacific Imports LLC",
-    text: "Best B2B marketplace for the UAE region. Clean interface, real sellers, and fast responses.",
-    rating: 5,
-  },
-  {
-    name: "Khalid Mansoor",
-    company: "Mansoor Wholesale",
-    text: "We listed our products and got our first bulk order within 48 hours. Incredible platform.",
-    rating: 5,
   },
 ];
 
@@ -145,19 +116,6 @@ export default function LandingPage() {
             </Link>
           </div>
         </div>
-
-        {/* Stats bar */}
-        <div className="relative max-w-4xl mx-auto mt-14">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 stagger">
-            {STATS.map(({ value, label, icon: Icon }) => (
-              <div key={label} className="glass rounded-2xl px-4 py-4 text-center animate-slide-up">
-                <Icon size={18} className="text-amber-300 mx-auto mb-1" />
-                <p className="text-xl sm:text-2xl font-bold text-white">{value}</p>
-                <p className="text-xs text-slate-400 mt-0.5">{label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
       </section>
 
       {/* ── Trust bar ── */}
@@ -168,7 +126,6 @@ export default function LandingPage() {
             "🔒 Secure transactions",
             "⚡ WhatsApp direct chat",
             "📦 Bulk MOQ pricing",
-            "🌍 80+ countries",
           ].map((t) => (
             <span key={t} className="text-xs sm:text-sm font-medium text-gray-600 whitespace-nowrap">
               {t}
@@ -243,9 +200,9 @@ export default function LandingPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto stagger">
           {[
-            { icon: Building2, step: "01", title: "Register Your Business", desc: "Create an account and submit your business details in under 5 minutes." },
-            { icon: ShieldCheck,  step: "02", title: "Get Verified",          desc: "Our team manually reviews your profile within 24–48 hours." },
-            { icon: Globe,        step: "03", title: "Start Trading",          desc: "Access all listings, post your products, and connect with partners." },
+            { icon: Building2,  step: "01", title: "Register Your Business", desc: "Create an account and submit your business details in under 5 minutes." },
+            { icon: ShieldCheck, step: "02", title: "Get Verified",           desc: "Our team manually reviews your profile within 24–48 hours." },
+            { icon: Globe,       step: "03", title: "Start Trading",           desc: "Access all listings, post your products, and connect with partners." },
           ].map(({ icon: Icon, step, title, desc }) => (
             <div key={step} className="text-center animate-slide-up">
               <div className="step-circle">{step}</div>
@@ -256,44 +213,6 @@ export default function LandingPage() {
               <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
             </div>
           ))}
-        </div>
-
-        {/* Connector line (desktop) */}
-        <div className="hidden sm:flex items-center justify-center gap-0 max-w-4xl mx-auto -mt-32 mb-8 pointer-events-none" aria-hidden>
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cream-300 to-cream-300 ml-24" />
-          <div className="flex-1 h-px bg-gradient-to-r from-cream-300 via-cream-300 to-transparent mr-24" />
-        </div>
-      </section>
-
-      {/* ── Testimonials ── */}
-      <section className="bg-cream-100 border-y border-cream-200 py-14 px-4">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
-            <div className="divider mx-auto mb-3" />
-            <h2 className="section-title">Trusted by Businesses Worldwide</h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 stagger">
-            {TESTIMONIALS.map(({ name, company, text, rating }) => (
-              <div key={name} className="card p-5 animate-slide-up">
-                <div className="flex gap-0.5 mb-3">
-                  {Array.from({ length: rating }).map((_, i) => (
-                    <Star key={i} size={14} className="text-primary fill-primary" />
-                  ))}
-                </div>
-                <p className="text-sm text-gray-600 leading-relaxed mb-4">&ldquo;{text}&rdquo;</p>
-                <div className="flex items-center gap-2 border-t border-cream-200 pt-3">
-                  <div className="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center text-primary font-bold text-xs">
-                    {name[0]}
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-800">{name}</p>
-                    <p className="text-xs text-gray-400">{company}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -307,7 +226,7 @@ export default function LandingPage() {
             Ready to grow your business?
           </h2>
           <p className="text-gray-500 text-sm mb-6">
-            Join thousands of verified businesses on BULKORA today.
+            Register your business and start trading on BULKORA today.
           </p>
           <ul className="text-sm text-left inline-flex flex-col gap-2 mb-8">
             {[
