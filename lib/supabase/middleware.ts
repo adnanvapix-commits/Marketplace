@@ -48,19 +48,23 @@ export async function updateSession(request: NextRequest) {
       return supabaseResponse;
     }
 
-    // 2. Admin protection
+    // 2. Admin protection — fast path: check email first (no DB hit)
     if (path.startsWith("/admin")) {
       if (!user) {
         const url = request.nextUrl.clone();
         url.pathname = "/";
         return NextResponse.redirect(url);
       }
-      const { data: adminProfile } = await supabase
-        .from("users").select("role").eq("id", user.id).single();
-      if (adminProfile?.role !== "admin") {
-        const url = request.nextUrl.clone();
-        url.pathname = "/";
-        return NextResponse.redirect(url);
+      const adminEnvEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
+      // Fast path: known admin email — skip DB call
+      if (user.email !== adminEnvEmail) {
+        const { data: adminProfile } = await supabase
+          .from("users").select("role").eq("id", user.id).single();
+        if (adminProfile?.role !== "admin") {
+          const url = request.nextUrl.clone();
+          url.pathname = "/";
+          return NextResponse.redirect(url);
+        }
       }
       return supabaseResponse;
     }
