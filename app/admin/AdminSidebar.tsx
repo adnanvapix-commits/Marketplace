@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Users, ShoppingBag,
-  CreditCard, ScrollText, Menu, X, LogOut, Sparkles,
+  CreditCard, ScrollText, Menu, X, LogOut,
 } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -88,9 +88,6 @@ export default function AdminSidebar() {
       {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col w-56 shrink-0 bg-cream-50 border-r border-cream-200 min-h-screen sticky top-0">
         <div className="h-16 flex items-center px-5 border-b border-cream-200 gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gold-gradient flex items-center justify-center shadow-cream shrink-0">
-            <Sparkles size={13} className="text-white" />
-          </div>
           <span className="font-bold text-lg tracking-tight">
             <span className="text-gold-gradient">BULK</span>
             <span className="text-gray-700">ORA</span>
@@ -108,9 +105,6 @@ export default function AdminSidebar() {
           {open ? <X size={20} /> : <Menu size={20} />}
         </button>
         <div className="flex items-center gap-1.5">
-          <div className="w-6 h-6 rounded-md bg-gold-gradient flex items-center justify-center">
-            <Sparkles size={11} className="text-white" />
-          </div>
           <span className="font-bold text-base tracking-tight">
             <span className="text-gold-gradient">BULK</span>
             <span className="text-gray-700">ORA</span>

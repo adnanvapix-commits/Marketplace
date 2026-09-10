@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, Sparkles, ArrowRight, Building2, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Building2, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { generateAvatarDataUri } from "@/lib/utils/generateAvatar";
 import toast from "react-hot-toast";
@@ -93,9 +93,6 @@ export default function LoginPage() {
         {/* Logo */}
         <div>
           <Link href="/" className="flex items-center gap-2 mb-12">
-            <div className="w-9 h-9 rounded-xl bg-gold-gradient flex items-center justify-center shadow-cream">
-              <Sparkles size={18} className="text-white" />
-            </div>
             <span className="text-2xl font-bold text-white tracking-tight">BULKORA</span>
           </Link>
 
@@ -132,9 +129,6 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8">
             <Link href="/" className="inline-flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl bg-gold-gradient flex items-center justify-center shadow-cream">
-                <Sparkles size={18} className="text-white" />
-              </div>
               <span className="text-2xl font-bold tracking-tight">
                 <span className="text-gold-gradient">BULK</span>
                 <span className="text-gray-800">ORA</span>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   Search, ShieldCheck, Building2, Globe, ArrowRight,
-  Sparkles, TrendingUp, Users, CheckCircle2, Zap, Lock,
+  TrendingUp, Users, CheckCircle2, Zap, Lock,
 } from "lucide-react";
 import { CATEGORIES } from "@/types";
 import GuestCTA from "./GuestCTA";
@@ -57,7 +57,6 @@ export default function LandingPage() {
         <div className="relative max-w-4xl mx-auto text-center animate-fade-in">
           {/* Pill badge */}
           <div className="inline-flex items-center gap-2 bg-white/10 text-amber-200 px-4 py-1.5 rounded-full text-xs font-semibold mb-6 border border-white/15 backdrop-blur-sm">
-            <Sparkles size={12} className="text-amber-300" />
             Dubai&apos;s Premier B2B Marketplace
           </div>
 

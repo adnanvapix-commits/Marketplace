@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home, ShoppingBag, PlusCircle, MessageCircle,
-  User, LogOut, Menu, X, Sparkles,
+  User, LogOut, Menu, X,
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { createClient } from "@/lib/supabase/client";
@@ -70,9 +70,6 @@ export default function Navbar() {
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0 group">
-          <div className="w-8 h-8 rounded-lg bg-gold-gradient flex items-center justify-center shadow-cream">
-            <Sparkles size={16} className="text-white" />
-          </div>
           <span className="text-xl font-bold tracking-tight">
             <span className="text-gold-gradient">BULK</span>
             <span className="text-gray-800">ORA</span>
