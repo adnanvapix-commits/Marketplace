@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Mail, MapPin } from "lucide-react";
 
 export default function Footer() {
@@ -24,22 +23,21 @@ export default function Footer() {
 
         {/* Quick Links */}
         <div className="space-y-2">
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Marketplace</p>
-          <div className="flex flex-col gap-1.5">
-            <Link href="/buy"       className="text-xs text-gray-500 hover:text-primary transition-colors">Browse Products</Link>
-            <Link href="/sell"      className="text-xs text-gray-500 hover:text-primary transition-colors">Start Selling</Link>
-            <Link href="/dashboard" className="text-xs text-gray-500 hover:text-primary transition-colors">Dashboard</Link>
-            <Link href="/chat"      className="text-xs text-gray-500 hover:text-primary transition-colors">Messages</Link>
-          </div>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">About</p>
+          <p className="text-xs text-gray-500 leading-relaxed">
+            BULKORA connects verified wholesale buyers and sellers across the UAE and beyond.
+            Every business is manually reviewed before gaining access.
+          </p>
         </div>
 
-        {/* Account */}
+        {/* Working Hours */}
         <div className="space-y-2">
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Account</p>
-          <div className="flex flex-col gap-1.5">
-            <Link href="/login"   className="text-xs text-gray-500 hover:text-primary transition-colors">Login / Sign Up</Link>
-            <Link href="/profile" className="text-xs text-gray-500 hover:text-primary transition-colors">My Profile</Link>
-            <Link href="/account" className="text-xs text-gray-500 hover:text-primary transition-colors">Settings</Link>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Business Hours</p>
+          <div className="flex flex-col gap-1.5 text-xs text-gray-500">
+            <span>Mon – Fri: 9:00 AM – 6:00 PM</span>
+            <span>Sat: 10:00 AM – 3:00 PM</span>
+            <span>Sun: Closed</span>
+            <span className="text-primary font-medium mt-1">GST +4 (Dubai Time)</span>
           </div>
         </div>
 
