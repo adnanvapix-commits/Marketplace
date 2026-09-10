@@ -213,7 +213,7 @@ export default function SubscriptionsTable({ initialUsers, adminId, tierEnabled 
                                     : "bg-white text-gray-400 border-gray-200 hover:border-gray-400"
                                 }`}
                               >
-                                {c.label[0]}
+                                {t === "expert" ? "M" : c.label[0]}
                               </button>
                             );
                           })}
