@@ -8,7 +8,6 @@ import {
   User, LogOut, Menu, X,
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
-import { createClient } from "@/lib/supabase/client";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -16,7 +15,6 @@ export default function Navbar() {
   const role = useAuthStore((s) => s.role);
   const hydrated = useAuthStore((s) => s.hydrated);
   const [open, setOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [scrolled, setScrolled] = useState(false);
 
   const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@gmail.com";
@@ -30,31 +28,6 @@ export default function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  useEffect(() => {
-    if (!user) return;
-    const supabase = createClient();
-    async function fetchUnread() {
-      try {
-        const { count } = await supabase
-          .from("messages")
-          .select("id", { count: "exact", head: true })
-          .eq("receiver_id", user!.id)
-          .eq("is_read", false);
-        setUnreadCount(count ?? 0);
-      } catch { 
-        // Silently fail if messages table doesn't exist or query fails
-        setUnreadCount(0);
-      }
-    }
-    
-    // Fetch immediately on mount
-    fetchUnread();
-    
-    // Then fetch every 30 seconds (reduced from 10s for better performance)
-    const interval = setInterval(fetchUnread, 30000);
-    return () => clearInterval(interval);
-  }, [user]);
 
   if (pathname.startsWith("/admin")) return null;
 
@@ -98,16 +71,9 @@ export default function Navbar() {
                 <PlusCircle size={15} className="shrink-0" /> Sell
               </Link>
 
-              <div className="relative">
-                <Link href="/chat" className={linkCls("/chat")}>
-                  <MessageCircle size={15} className="shrink-0" /> Chat
-                </Link>
-                {unreadCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5">
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
-                )}
-              </div>
+              <Link href="/chat" className={linkCls("/chat")}>
+                <MessageCircle size={15} className="shrink-0" /> Chat
+              </Link>
 
               <Link
                 href={isAdmin ? "/admin" : "/dashboard"}
@@ -166,15 +132,8 @@ export default function Navbar() {
                 <MobileLink href="/sell" icon={<PlusCircle size={18} />} label="Sell"
                   active={isActive("/sell")} onClick={() => setOpen(false)} />
 
-                <div className="relative">
-                  <MobileLink href="/chat" icon={<MessageCircle size={18} />} label="Chat"
+                <MobileLink href="/chat" icon={<MessageCircle size={18} />} label="Chat"
                     active={isActive("/chat")} onClick={() => setOpen(false)} />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-2.5 right-4 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5">
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
-                  )}
-                </div>
 
                 <MobileLink
                   href={isAdmin ? "/admin" : "/dashboard"}
