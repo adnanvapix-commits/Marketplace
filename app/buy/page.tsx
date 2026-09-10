@@ -202,7 +202,7 @@ function BuyPageInner() {
                     </span>
                   )}
                 </p>
-                {hasAnyFilter && (
+                {true && (
                   <button onClick={clearAll} className="text-xs text-red-500 hover:underline flex items-center gap-1">
                     <X size={12} /> Clear all
                   </button>
