@@ -17,6 +17,8 @@ export default function Navbar() {
 
   const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@gmail.com";
   const isAdmin = role === "admin" || user?.email === ADMIN_EMAIL;
+  // Show logged-in links only once hydration confirms a user exists.
+  // Before hydration, treat as guest so Login button is always visible.
   const isLoggedIn = hydrated && !!user;
 
   // Poll unread message count every 10s

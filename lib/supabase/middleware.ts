@@ -34,12 +34,16 @@ export async function updateSession(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     const path = request.nextUrl.pathname;
 
-    // 1. Auth guard
+    // 1. Auth guard — only redirect away from /login if session is confirmed valid
     if (path === "/login" || path === "/register") {
-      if (user) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/";
-        return NextResponse.redirect(url);
+      try {
+        if (user) {
+          const url = request.nextUrl.clone();
+          url.pathname = "/";
+          return NextResponse.redirect(url);
+        }
+      } catch {
+        // session check failed — let them through to login
       }
       return supabaseResponse;
     }

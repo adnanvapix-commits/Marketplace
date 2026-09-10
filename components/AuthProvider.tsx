@@ -15,6 +15,12 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     const supabase = createClient();
 
+    // Safety net: if onAuthStateChange never fires (e.g. missing env vars),
+    // mark hydrated after 3s so the UI doesn't stay stuck showing nothing.
+    const fallbackTimer = setTimeout(() => {
+      setHydrated(true);
+    }, 3000);
+
     async function fetchProfile(userId: string) {
       const { data } = await supabase
         .from("users")
@@ -64,7 +70,10 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(fallbackTimer);
+    };
   }, [setUser, setRole, setIsVerified, setHydrated, setUserRole, setHasCompletedProfile]);
 
   return <>{children}</>;
