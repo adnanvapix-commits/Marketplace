@@ -4,9 +4,12 @@ import AccountForm from "./AccountForm";
 
 export default async function AccountPage() {
   const supabase = await createClient();
+
+  // Get user ID first (from JWT - no DB call)
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Fetch profile (single DB call)
   const { data: profile } = await supabase
     .from("users")
     .select("*")

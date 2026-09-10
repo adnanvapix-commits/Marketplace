@@ -9,17 +9,19 @@ import type { Product } from "@/types";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
+
+  // Get user ID first (from JWT - no DB call)
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("users").select("*").eq("id", user.id).single();
-
-  const { data: products } = await supabase
-    .from("products")
-    .select("id, title, price, condition, quantity, minimum_order_quantity, category")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+  // Fetch profile in parallel with products (both are DB calls)
+  const [{ data: profile }, { data: products }] = await Promise.all([
+    supabase.from("users").select("*").eq("id", user.id).single(),
+    supabase.from("products")
+      .select("id, title, price, condition, quantity, minimum_order_quantity, category")
+      .eq("seller_id", user.id)
+      .order("created_at", { ascending: false }),
+  ]);
 
   const roles: string[] = profile?.roles ?? [profile?.role ?? "buyer"];
 
