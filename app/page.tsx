@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { CATEGORIES } from "@/types";
 import GuestCTA from "./GuestCTA";
+import HeroCTA from "@/components/HeroCTA";
 
 const FEATURES = [
   {
@@ -107,12 +108,7 @@ export default function LandingPage() {
             >
               🏷️ Start Selling
             </Link>
-            <Link
-              href="/login"
-              className="flex items-center gap-1.5 text-primary text-sm font-medium hover:text-primary-dark transition-colors px-2"
-            >
-              Create free account <ArrowRight size={14} />
-            </Link>
+            <HeroCTA />
           </div>
         </div>
       </section>

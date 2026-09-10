@@ -42,10 +42,17 @@ export default function Navbar() {
           .eq("receiver_id", user!.id)
           .eq("is_read", false);
         setUnreadCount(count ?? 0);
-      } catch { /* column may not exist */ }
+      } catch { 
+        // Silently fail if messages table doesn't exist or query fails
+        setUnreadCount(0);
+      }
     }
+    
+    // Fetch immediately on mount
     fetchUnread();
-    const interval = setInterval(fetchUnread, 10000);
+    
+    // Then fetch every 30 seconds (reduced from 10s for better performance)
+    const interval = setInterval(fetchUnread, 30000);
     return () => clearInterval(interval);
   }, [user]);
 
