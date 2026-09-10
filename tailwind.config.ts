@@ -40,7 +40,7 @@ const config: Config = {
       backgroundImage: {
         "cream-gradient": "linear-gradient(135deg, #FFFDF7 0%, #FFF9EC 50%, #FFF3D6 100%)",
         "gold-gradient": "linear-gradient(135deg, #B8860B 0%, #D4A017 50%, #F0CC70 100%)",
-        "hero-gradient": "linear-gradient(135deg, #1a1209 0%, #2d1f0a 40%, #3d2b10 100%)",
+        "hero-gradient": "linear-gradient(135deg, #FFFDF7 0%, #FFF9EC 50%, #FFF3D6 100%)",
       },
       animation: {
         "fade-in": "fadeIn 0.5s ease-out",

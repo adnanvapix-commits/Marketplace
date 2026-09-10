@@ -56,16 +56,16 @@ export default function LandingPage() {
 
         <div className="relative max-w-4xl mx-auto text-center animate-fade-in">
           {/* Pill badge */}
-          <div className="inline-flex items-center gap-2 bg-white/10 text-amber-200 px-4 py-1.5 rounded-full text-xs font-semibold mb-6 border border-white/15 backdrop-blur-sm">
+          <div className="inline-flex items-center gap-2 bg-primary/5 text-primary-dark px-4 py-1.5 rounded-full text-xs font-semibold mb-6 border border-primary/15">
             Dubai&apos;s Premier B2B Marketplace
           </div>
 
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-white mb-5 leading-tight tracking-tight text-balance">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-gray-800 mb-5 leading-tight tracking-tight text-balance">
             Trade Smarter with<br />
-            <span className="text-gold-gradient">Verified Businesses</span>
+            <span className="bg-gradient-to-r from-primary via-primary-dark to-primary bg-clip-text text-transparent">Verified Businesses</span>
           </h1>
 
-          <p className="text-slate-300 text-sm sm:text-lg mb-10 max-w-xl mx-auto leading-relaxed">
+          <p className="text-gray-600 text-sm sm:text-lg mb-10 max-w-xl mx-auto leading-relaxed">
             Connect with pre-verified buyers and sellers worldwide.
             Access exclusive wholesale pricing and build lasting partnerships.
           </p>
@@ -97,19 +97,19 @@ export default function LandingPage() {
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/buy"
-              className="flex items-center gap-2 px-7 py-3 rounded-xl bg-white text-primary font-semibold text-sm hover:bg-cream-100 transition-all active:scale-95 shadow-soft"
+              className="flex items-center gap-2 px-7 py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-dark transition-all active:scale-95 shadow-soft"
             >
               🛒 Start Buying
             </Link>
             <Link
               href="/sell"
-              className="flex items-center gap-2 px-7 py-3 rounded-xl border-2 border-white/40 text-white font-semibold text-sm hover:bg-white/10 transition-all active:scale-95"
+              className="flex items-center gap-2 px-7 py-3 rounded-xl border-2 border-primary/30 text-primary-dark font-semibold text-sm hover:bg-primary/5 transition-all active:scale-95"
             >
               🏷️ Start Selling
             </Link>
             <Link
               href="/login"
-              className="flex items-center gap-1.5 text-amber-200 text-sm font-medium hover:text-white transition-colors"
+              className="flex items-center gap-1.5 text-primary text-sm font-medium hover:text-primary-dark transition-colors"
             >
               Create free account <ArrowRight size={14} />
             </Link>
