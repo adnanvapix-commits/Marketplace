@@ -138,7 +138,7 @@ function BuyPageInner() {
                 <Search size={34} className="text-gray-300" />
               </div>
               <h2 className="text-base font-semibold text-gray-600 mb-2">
-                Search the B2B Marketplace
+                Search BULKORA
               </h2>
               <p className="text-sm max-w-xs">
                 Enter a product name, brand, or use the filters to find verified listings.

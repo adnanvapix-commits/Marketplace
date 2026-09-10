@@ -56,7 +56,7 @@ export default function LoginPage() {
             ...(companyName ? { company_name: companyName } : {}),
           });
         }
-        toast.success("Account created! Welcome to B2B Market.");
+        toast.success("Account created! Welcome to BULKORA.");
         router.push("/");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -93,7 +93,7 @@ export default function LoginPage() {
         <div className="text-center mb-6">
           <div className="inline-flex items-center gap-2 mb-2">
             <Building2 size={26} className="text-primary" />
-            <span className="text-2xl font-bold text-gray-900">B2B Market</span>
+            <span className="text-2xl font-bold text-gray-900">BULKORA</span>
           </div>
           <p className="text-gray-500 text-sm">
             {isSignup ? "Create your business account" : "Sign in to your account"}

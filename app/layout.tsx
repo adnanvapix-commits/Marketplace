@@ -12,8 +12,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "B2B Market — Trade Smarter",
-  description: "Verified B2B marketplace for buyers and sellers worldwide",
+  title: "BULKORA — Trade Smarter",
+  description: "BULKORA — Verified B2B marketplace for buyers and sellers worldwide",
 };
 
 export const viewport = {

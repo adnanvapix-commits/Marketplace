@@ -10,7 +10,7 @@ export default function HomePage() {
       <section className="bg-gradient-to-br from-slate-900 via-slate-800 to-primary px-4 py-12 sm:py-20">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 text-white/80 px-3 py-1 rounded-full text-xs font-medium mb-4 border border-white/20">
-            <ShieldCheck size={12} /> Verified B2B Marketplace
+            <ShieldCheck size={12} /> BULKORA — Verified B2B
           </div>
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
             Trade Smarter with<br className="hidden sm:block" />

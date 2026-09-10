@@ -1,5 +1,5 @@
 -- ============================================================
--- MarketPlace Database Schema
+-- BULKORA Database Schema
 -- Run this in your Supabase SQL Editor
 -- ============================================================
 
@@ -61,29 +61,37 @@ alter table public.products enable row level security;
 alter table public.messages enable row level security;
 
 -- Users: anyone can read, only own row can be updated
+drop policy if exists "Users are viewable by everyone" on public.users;
 create policy "Users are viewable by everyone" on public.users
   for select using (true);
 
+drop policy if exists "Users can update own profile" on public.users;
 create policy "Users can update own profile" on public.users
   for update using (auth.uid() = id);
 
 -- Products: anyone can read, only owner can insert/update/delete
+drop policy if exists "Products are viewable by everyone" on public.products;
 create policy "Products are viewable by everyone" on public.products
   for select using (true);
 
+drop policy if exists "Authenticated users can insert products" on public.products;
 create policy "Authenticated users can insert products" on public.products
   for insert with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update own products" on public.products;
 create policy "Users can update own products" on public.products
   for update using (auth.uid() = user_id);
 
+drop policy if exists "Users can delete own products" on public.products;
 create policy "Users can delete own products" on public.products
   for delete using (auth.uid() = user_id);
 
 -- Messages: only sender and receiver can read/write
+drop policy if exists "Users can view their own messages" on public.messages;
 create policy "Users can view their own messages" on public.messages
   for select using (auth.uid() = sender_id or auth.uid() = receiver_id);
 
+drop policy if exists "Authenticated users can send messages" on public.messages;
 create policy "Authenticated users can send messages" on public.messages
   for insert with check (auth.uid() = sender_id);
 
@@ -110,4 +118,12 @@ create trigger on_auth_user_created
 -- Enable Realtime for messages table
 -- ============================================================
 
-alter publication supabase_realtime add table public.messages;
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'messages'
+  ) then
+    alter publication supabase_realtime add table public.messages;
+  end if;
+end $$;
