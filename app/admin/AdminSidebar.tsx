@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, ShoppingBag,
   CreditCard, ScrollText, Menu, X, LogOut,
@@ -20,7 +20,6 @@ const links = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const setUser = useAuthStore((s) => s.setUser);
@@ -29,21 +28,14 @@ export default function AdminSidebar() {
 
   async function handleLogout() {
     setLoggingOut(true);
-    try {
-      const supabase = createClient();
-      await supabase.auth.signOut();
-      // Clear auth store
-      setUser(null);
-      setRole(null);
-      setHydrated(true);
-      router.push("/");
-      router.refresh();
-    } catch {
-      // fallback — hard redirect
-      window.location.href = "/";
-    } finally {
-      setLoggingOut(false);
-    }
+    // Clear client-side auth store immediately so UI updates instantly
+    setUser(null);
+    setRole(null);
+    setHydrated(true);
+    // Fire signOut without awaiting, then hard-redirect via the server route
+    // which clears the session cookie — this feels instant to the user
+    try { createClient().auth.signOut(); } catch { /* ignore */ }
+    window.location.replace("/");
   }
 
   const nav = (
