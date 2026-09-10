@@ -24,10 +24,18 @@
 
   a, button {
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
   h1, h2, h3, h4, h5, h6 {
     letter-spacing: -0.02em;
+  }
+
+  /* Mobile-optimized typography */
+  @media (max-width: 640px) {
+    h1 { font-size: 1.875rem; }
+    h2 { font-size: 1.5rem; }
+    h3 { font-size: 1.25rem; }
   }
 
   ::selection {
@@ -56,27 +64,31 @@
 
   /* ── Buttons ── */
   .btn-primary {
-    @apply bg-primary hover:bg-primary-dark active:scale-95 text-white font-semibold px-5 py-2.5 rounded-xl
+    @apply bg-primary hover:bg-primary-dark active:scale-95 text-white font-semibold 
+           px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base
            transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed select-none
-           shadow-cream hover:shadow-cream-md;
+           shadow-cream hover:shadow-cream-md min-h-[44px] touch-manipulation;
   }
 
   .btn-outline {
     @apply border-2 border-primary text-primary hover:bg-primary active:scale-95 hover:text-white
-           font-semibold px-5 py-2.5 rounded-xl transition-all duration-150 select-none;
+           font-semibold px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base
+           transition-all duration-150 select-none min-h-[44px] touch-manipulation;
   }
 
   .btn-ghost {
-    @apply text-primary hover:bg-primary-light active:scale-95 font-medium px-4 py-2 rounded-xl
-           transition-all duration-150 select-none;
+    @apply text-primary hover:bg-primary-light active:scale-95 font-medium 
+           px-3 sm:px-4 py-2 rounded-xl text-sm sm:text-base
+           transition-all duration-150 select-none min-h-[40px] touch-manipulation;
   }
 
   /* ── Inputs ── */
   .input {
-    @apply w-full border border-warm-200 rounded-xl px-4 py-2.5 text-sm
+    @apply w-full border border-warm-200 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 
+           text-sm sm:text-base min-h-[44px]
            focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
            bg-white text-gray-800 placeholder-gray-400
-           transition-all duration-150;
+           transition-all duration-150 touch-manipulation;
   }
 
   /* ── Cards ── */
@@ -186,6 +198,35 @@
     animation: slideUp 0.6s ease-out both;
   }
 
+  .animate-bounce-gentle {
+    animation: bounceGentle 2s ease-in-out infinite;
+  }
+
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(184, 134, 11, 0.15);
+  }
+
+  .hover-scale {
+    transition: transform 0.2s ease;
+  }
+
+  .hover-scale:hover {
+    transform: scale(1.05);
+  }
+
+  /* Mobile-friendly spacing */
+  @media (max-width: 640px) {
+    .mobile-compact {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+  }
+
   /* Staggered children */
   .stagger > *:nth-child(1) { animation-delay: 0ms; }
   .stagger > *:nth-child(2) { animation-delay: 80ms; }
@@ -208,4 +249,24 @@
     from { background-position: -200% 0; }
     to   { background-position:  200% 0; }
   }
+
+  @keyframes bounceGentle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
 }
+
+/* Mobile navigation improvements */
+@media (max-width: 768px) {
+  .mobile-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 50;
+  }
+}
+

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import AuthProvider from "@/components/AuthProvider";
 import { Toaster } from "react-hot-toast";
 
@@ -33,6 +34,7 @@ export default function RootLayout({
         <AuthProvider>
           <Navbar />
           <main className="min-h-screen">{children}</main>
+          <Footer />
           <Toaster position="top-right" />
         </AuthProvider>
       </body>
