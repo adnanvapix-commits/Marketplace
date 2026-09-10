@@ -44,18 +44,22 @@ export default function LoginPage() {
 
         // Fire profile upsert without awaiting — don't block the redirect
         if (data.user) {
-          supabase.from("users").upsert({
-            id: data.user.id,
-            email,
-            full_name: fullName,
-            whatsapp_number: whatsapp,
-            roles: ["buyer", "seller"],
-            role: "buyer",
-            is_verified: false,
-            verification_status: "pending",
-            avatar_url: generateAvatarDataUri(fullName, email),
-            ...(companyName ? { company_name: companyName } : {}),
-          }).then(() => {}).catch(() => {});
+          void (async () => {
+            try {
+              await supabase.from("users").upsert({
+                id: data.user!.id,
+                email,
+                full_name: fullName,
+                whatsapp_number: whatsapp,
+                roles: ["buyer", "seller"],
+                role: "buyer",
+                is_verified: false,
+                verification_status: "pending",
+                avatar_url: generateAvatarDataUri(fullName, email),
+                ...(companyName ? { company_name: companyName } : {}),
+              });
+            } catch { /* non-blocking */ }
+          })();
         }
 
         toast.success("Account created! Welcome to BULKORA.");
