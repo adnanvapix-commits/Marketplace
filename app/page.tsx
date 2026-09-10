@@ -47,7 +47,7 @@ export default function LandingPage() {
     <div className="min-h-screen" style={{ background: "#FFFDF7" }}>
 
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden bg-hero-gradient px-4 py-16 sm:py-24">
+      <section className="relative overflow-hidden bg-hero-gradient px-4 py-12 sm:py-16 md:py-24">
         {/* Decorative circles */}
         <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-10"
           style={{ background: "radial-gradient(circle, #F0CC70 0%, transparent 70%)" }} />
@@ -56,16 +56,16 @@ export default function LandingPage() {
 
         <div className="relative max-w-4xl mx-auto text-center animate-fade-in">
           {/* Pill badge */}
-          <div className="inline-flex items-center gap-2 bg-primary/5 text-primary-dark px-4 py-1.5 rounded-full text-xs font-semibold mb-6 border border-primary/15">
+          <div className="inline-flex items-center gap-2 bg-primary/5 text-primary-dark px-4 py-1.5 rounded-full text-xs font-semibold mb-4 sm:mb-6 border border-primary/15">
             Dubai&apos;s Premier B2B Marketplace
           </div>
 
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-gray-800 mb-5 leading-tight tracking-tight text-balance">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 mb-4 sm:mb-5 leading-tight tracking-tight text-balance px-2">
             Trade Smarter with<br />
             <span className="bg-gradient-to-r from-primary via-primary-dark to-primary bg-clip-text text-transparent">Verified Businesses</span>
           </h1>
 
-          <p className="text-gray-600 text-sm sm:text-lg mb-10 max-w-xl mx-auto leading-relaxed">
+          <p className="text-gray-600 text-sm sm:text-base md:text-lg mb-8 sm:mb-10 max-w-xl mx-auto leading-relaxed px-4">
             Connect with pre-verified buyers and sellers worldwide.
             Access exclusive wholesale pricing and build lasting partnerships.
           </p>
@@ -74,42 +74,42 @@ export default function LandingPage() {
           <form
             action="/buy"
             method="GET"
-            className="flex flex-col sm:flex-row gap-2 max-w-2xl mx-auto mb-8"
+            className="flex flex-col sm:flex-row gap-2 sm:gap-3 max-w-2xl mx-auto mb-6 sm:mb-8 px-2"
           >
             <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="text"
                 name="q"
                 placeholder="Search products, brands, categories..."
-                className="w-full pl-11 pr-4 py-3.5 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 shadow-soft-md"
+                className="w-full pl-10 sm:pl-11 pr-4 py-3 sm:py-3.5 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 shadow-soft-md"
               />
             </div>
             <button
               type="submit"
-              className="bg-primary hover:bg-primary-dark text-white px-8 py-3.5 rounded-xl font-semibold text-sm transition-all active:scale-95 shadow-cream-md whitespace-nowrap"
+              className="bg-primary hover:bg-primary-dark text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-semibold text-sm transition-all active:scale-95 shadow-cream-md whitespace-nowrap"
             >
               Search
             </button>
           </form>
 
           {/* CTA buttons */}
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-2">
             <Link
               href="/buy"
-              className="flex items-center gap-2 px-7 py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-dark transition-all active:scale-95 shadow-soft"
+              className="flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-dark transition-all active:scale-95 shadow-soft"
             >
               🛒 Start Buying
             </Link>
             <Link
               href="/sell"
-              className="flex items-center gap-2 px-7 py-3 rounded-xl border-2 border-primary/30 text-primary-dark font-semibold text-sm hover:bg-primary/5 transition-all active:scale-95"
+              className="flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3 rounded-xl border-2 border-primary/30 text-primary-dark font-semibold text-sm hover:bg-primary/5 transition-all active:scale-95"
             >
               🏷️ Start Selling
             </Link>
             <Link
               href="/login"
-              className="flex items-center gap-1.5 text-primary text-sm font-medium hover:text-primary-dark transition-colors"
+              className="flex items-center gap-1.5 text-primary text-sm font-medium hover:text-primary-dark transition-colors px-2"
             >
               Create free account <ArrowRight size={14} />
             </Link>
