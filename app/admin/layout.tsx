@@ -4,34 +4,37 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import AdminSidebar from "./AdminSidebar";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  // 1. Get current auth session
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+
+  // Run auth + profile check in parallel
+  const [{ data: { user } }, adminClient] = await Promise.all([
+    supabase.auth.getUser(),
+    Promise.resolve(createAdminClient()),
+  ]);
 
   if (!user) redirect("/login");
 
-  // 2. Use service role client to bypass RLS and read role
-  let isAdmin = false;
-  try {
-    const adminClient = createAdminClient();
-    const { data: profile } = await adminClient
-      .from("users")
-      .select("role, email")
-      .eq("id", user.id)
-      .single();
+  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
 
-    const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
-    isAdmin = profile?.role === "admin" || profile?.email === adminEmail;
-  } catch {
-    // If service role key not set, fall back to email check only
-    const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
-    isAdmin = user.email === adminEmail;
+  let isAdmin = user.email === adminEmail; // fast path — no DB hit for known admin email
+
+  if (!isAdmin) {
+    try {
+      const { data: profile } = await adminClient
+        .from("users")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      isAdmin = profile?.role === "admin";
+    } catch {
+      isAdmin = false;
+    }
   }
 
   if (!isAdmin) redirect("/");
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-cream-50">
       <AdminSidebar />
       <main className="flex-1 min-w-0 overflow-y-auto">
         {children}

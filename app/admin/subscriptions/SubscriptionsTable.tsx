@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 interface Props {
   initialUsers: AdminUser[];
   adminId: string;
+  tierEnabled?: boolean;
 }
 
 type SubFilter = "all" | "active" | "expired" | "none";
@@ -26,7 +27,7 @@ const TIER_CONFIG: Record<string, { label: string; color: string; bg: string; bo
   beginner: { label: "Beginner", color: "text-green-700",  bg: "bg-green-50",   border: "border-green-200", icon: Zap },
 };
 
-export default function SubscriptionsTable({ initialUsers, adminId }: Props) {
+export default function SubscriptionsTable({ initialUsers, adminId, tierEnabled = true }: Props) {
   const [users, setUsers] = useState<AdminUser[]>(initialUsers);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<SubFilter>("all");
@@ -127,8 +128,9 @@ export default function SubscriptionsTable({ initialUsers, adminId }: Props) {
   return (
     <div className="space-y-4">
 
-      {/* Tier summary cards */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* Tier summary cards — only when migration has run */}
+      {tierEnabled && (
+        <div className="grid grid-cols-3 gap-3">
         {(["elite", "expert", "beginner"] as const).map((tier) => {
           const c = TIER_CONFIG[tier];
           const Icon = c.icon;
@@ -143,7 +145,8 @@ export default function SubscriptionsTable({ initialUsers, adminId }: Props) {
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="card p-3 sm:p-4 flex flex-col sm:flex-row gap-3">
@@ -173,7 +176,7 @@ export default function SubscriptionsTable({ initialUsers, adminId }: Props) {
         <table className="w-full text-sm min-w-[720px]">
           <thead>
             <tr className="border-b border-cream-200 bg-cream-50">
-              {["Email", "Status", "Tier", "Expiry", "Set Expiry", "Actions"].map((h) => (
+              {["Email", "Status", ...(tierEnabled ? ["Tier"] : []), "Expiry", "Set Expiry", "Actions"].map((h) => (
                 <th key={h} className="text-left px-4 py-3 font-bold text-gray-500 text-xs uppercase tracking-widest">
                   {h}
                 </th>
@@ -183,47 +186,41 @@ export default function SubscriptionsTable({ initialUsers, adminId }: Props) {
           <tbody className="divide-y divide-cream-100">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center py-10 text-gray-400 text-sm">No users found</td>
+                <td colSpan={tierEnabled ? 6 : 5} className="text-center py-10 text-gray-400 text-sm">No users found</td>
               </tr>
             ) : (
               filtered.map((user) => (
                 <tr key={user.id} className="hover:bg-cream-50 transition-colors">
-
-                  {/* Email */}
-                  <td className="px-4 py-3 font-medium text-gray-800 max-w-[180px] truncate">
-                    {user.email}
-                  </td>
-
-                  {/* Sub status */}
+                  <td className="px-4 py-3 font-medium text-gray-800 max-w-[180px] truncate">{user.email}</td>
                   <td className="px-4 py-3">{statusBadge(user)}</td>
-
-                  {/* Tier badge + quick-change */}
-                  <td className="px-4 py-3">
-                    <div className="flex flex-col gap-1.5">
-                      {tierBadge(user.subscription_tier as Tier)}
-                      <div className="flex gap-1">
-                        {(["elite", "expert", "beginner"] as const).map((t) => {
-                          const active = user.subscription_tier === t;
-                          const c = TIER_CONFIG[t];
-                          return (
-                            <button
-                              key={t}
-                              onClick={() => handleSetTier(user, active ? null : t)}
-                              disabled={loading === user.id + "_tier"}
-                              title={`${active ? "Remove" : "Set"} ${c.label} (AED ${TIER_PRICES[t]})`}
-                              className={`text-[10px] px-1.5 py-0.5 rounded border font-semibold transition-all disabled:opacity-40 ${
-                                active
-                                  ? `${c.bg} ${c.color} ${c.border}`
-                                  : "bg-white text-gray-400 border-gray-200 hover:border-gray-400"
-                              }`}
-                            >
-                              {c.label[0]}
-                            </button>
-                          );
-                        })}
+                  {tierEnabled && (
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col gap-1.5">
+                        {tierBadge(user.subscription_tier as Tier)}
+                        <div className="flex gap-1">
+                          {(["elite", "expert", "beginner"] as const).map((t) => {
+                            const active = user.subscription_tier === t;
+                            const c = TIER_CONFIG[t];
+                            return (
+                              <button
+                                key={t}
+                                onClick={() => handleSetTier(user, active ? null : t)}
+                                disabled={loading === user.id + "_tier"}
+                                title={`${active ? "Remove" : "Set"} ${c.label} (AED ${TIER_PRICES[t]})`}
+                                className={`text-[10px] px-1.5 py-0.5 rounded border font-semibold transition-all disabled:opacity-40 ${
+                                  active
+                                    ? `${c.bg} ${c.color} ${c.border}`
+                                    : "bg-white text-gray-400 border-gray-200 hover:border-gray-400"
+                                }`}
+                              >
+                                {c.label[0]}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  </td>
+                    </td>
+                  )}
 
                   {/* Expiry */}
                   <td className="px-4 py-3 text-xs text-gray-500">
