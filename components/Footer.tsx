@@ -9,10 +9,7 @@ export default function Footer() {
         {/* Brand */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-              style={{ background: "linear-gradient(135deg, #1B3A6B 0%, #2E8B57 100%)" }}>
-              <span className="text-white font-black text-base leading-none">B</span>
-            </div>
+            <img src="/logo.jpeg" alt="BULKORA" className="w-8 h-8 rounded-md object-contain" />
             <span className="text-lg font-black tracking-tight text-brand-gradient">BULKORA</span>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed max-w-[200px]">

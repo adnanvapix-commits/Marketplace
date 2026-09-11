@@ -15,6 +15,16 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "BULKORA — Trade Smarter",
   description: "BULKORA — Verified B2B marketplace for buyers and sellers worldwide",
+  icons: {
+    icon: "/logo.jpeg",
+    apple: "/logo.jpeg",
+    shortcut: "/logo.jpeg",
+  },
+  openGraph: {
+    title: "BULKORA — Trade Smarter",
+    description: "Dubai's verified B2B marketplace for wholesale trade",
+    images: [{ url: "/logo.jpeg" }],
+  },
 };
 
 export const viewport = {

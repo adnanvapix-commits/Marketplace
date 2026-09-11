@@ -53,15 +53,9 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
-            style={{ background: "linear-gradient(135deg, #1B3A6B 0%, #2E8B57 100%)" }}>
-            <span className="text-white font-black text-lg leading-none">B</span>
-          </div>
-          <span className="text-lg font-black tracking-tight">
-            <span className="text-brand-gradient">BULK</span>
-            <span style={{ color: "#C8960C" }}>ORA</span>
-          </span>
+        <Link href="/" className="flex items-center gap-2 shrink-0 group">
+          <img src="/logo.jpeg" alt="BULKORA" className="w-9 h-9 rounded-lg object-contain" />
+          <span className="text-lg font-black tracking-tight text-brand-gradient">BULKORA</span>
         </Link>
 
         {/* Desktop links */}

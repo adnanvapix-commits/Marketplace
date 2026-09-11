@@ -1,8 +1,7 @@
-import { redirect } from "next/navigation";
+import HomeClient from "./HomeClient";
 
 export const metadata = { title: "Home | BULKORA" };
 
 export default function HomePage() {
-  // Redirect /home to the landing page at /
-  redirect("/");
+  return <HomeClient />;
 }

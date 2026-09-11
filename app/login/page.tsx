@@ -101,6 +101,7 @@ export default function LoginPage() {
 
         <div>
           <Link href="/" className="flex items-center gap-2 mb-12">
+            <img src="/logo.jpeg" alt="BULKORA" className="w-10 h-10 rounded-lg object-contain" />
             <span className="text-2xl font-bold text-white tracking-tight">BULKORA</span>
           </Link>
           <h2 className="text-3xl font-bold text-white leading-tight mb-4">
@@ -135,10 +136,8 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8">
             <Link href="/" className="inline-flex items-center gap-2">
-              <span className="text-2xl font-bold tracking-tight">
-                <span className="text-gold-gradient">BULK</span>
-                <span className="text-gray-800">ORA</span>
-              </span>
+              <img src="/logo.jpeg" alt="BULKORA" className="w-9 h-9 rounded-lg object-contain" />
+              <span className="text-2xl font-bold tracking-tight text-brand-gradient">BULKORA</span>
             </Link>
           </div>
 
