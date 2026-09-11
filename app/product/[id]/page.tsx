@@ -4,6 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import ChatButton from "./ChatButton";
 import type { Product } from "@/types";
 
+// Cache product pages for 60s — avoids hitting Supabase on every visit
+export const revalidate = 60;
+
 export default async function ProductDetailPage({
   params,
 }: {

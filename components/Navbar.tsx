@@ -41,6 +41,9 @@ export default function Navbar() {
         : "text-gray-600 hover:text-primary hover:bg-cream-100"
     }`;
 
+  // Prefetch key routes on mount for instant navigation
+  const prefetchRoutes = ["/home", "/buy", "/dashboard", "/profile", "/chat", "/subscription"];
+
   return (
     <nav className={`sticky top-0 z-50 transition-all duration-300 ${
       scrolled

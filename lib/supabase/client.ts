@@ -1,9 +1,13 @@
 import { createBrowserClient } from "@supabase/ssr";
 
-// Client-side Supabase instance (used in components)
+// Memoized singleton — one client instance per browser session
+let client: ReturnType<typeof createBrowserClient> | null = null;
+
 export function createClient() {
-  return createBrowserClient(
+  if (client) return client;
+  client = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
+  return client;
 }

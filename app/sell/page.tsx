@@ -47,7 +47,7 @@ export default function SellPage() {
 
       setDone(true);
       toast.success("Product listed!");
-      setTimeout(() => router.push("/dashboard"), 1200);
+      router.push("/dashboard");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to list product");
     } finally {
