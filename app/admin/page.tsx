@@ -37,6 +37,7 @@ export default async function AdminDashboard() {
     { href: "/admin/users",         label: "Manage Users",    primary: true  },
     { href: "/admin/products",      label: "Manage Products", primary: false },
     { href: "/admin/subscriptions", label: "Subscriptions",   primary: false },
+    { href: "/admin/tickets",       label: "Support Tickets", primary: false },
     { href: "/admin/logs",          label: "View Logs",       primary: false },
   ];
 
@@ -70,7 +71,7 @@ export default async function AdminDashboard() {
       {/* Quick actions */}
       <div className="card p-5">
         <h2 className="font-semibold text-gray-700 mb-4 text-sm">Quick Actions</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
           {quickLinks.map(({ href, label, primary }) => (
             <Link
               key={href}

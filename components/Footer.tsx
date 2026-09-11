@@ -34,18 +34,13 @@ export default function Footer() {
           </Link>
         </div>
 
-        {/* Business Hours + Links */}
+        {/* Links */}
         <div className="space-y-2">
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Business Hours</p>
-          <div className="flex flex-col gap-1.5 text-xs text-gray-500">
-            <span>Mon – Fri: 9:00 AM – 6:00 PM</span>
-            <span>Sat: 10:00 AM – 3:00 PM</span>
-            <span>Sun: Closed</span>
-            <span className="text-primary font-medium mt-1">GST +4 (Dubai Time)</span>
-          </div>
-          <div className="flex gap-4 pt-1">
-            <Link href="/help" className="text-xs text-gray-400 hover:text-primary transition-colors">Help & Support</Link>
-            <Link href="/about" className="text-xs text-gray-400 hover:text-primary transition-colors">About Us</Link>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Company</p>
+          <div className="flex flex-col gap-1.5">
+            <Link href="/about" className="text-xs text-gray-500 hover:text-primary transition-colors">About Us</Link>
+            <Link href="/help" className="text-xs text-gray-500 hover:text-primary transition-colors">Help & Support</Link>
+            <Link href="/subscription" className="text-xs text-gray-500 hover:text-primary transition-colors">Pricing</Link>
           </div>
         </div>
 
