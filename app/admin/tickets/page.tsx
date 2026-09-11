@@ -3,10 +3,16 @@ import TicketsTable from "./TicketsTable";
 
 export default async function AdminTicketsPage() {
   const db = createAdminClient();
-  const { data } = await db
-    .from("support_tickets")
-    .select("*")
-    .order("created_at", { ascending: false });
+  let data = [];
+  try {
+    const { data: rows } = await db
+      .from("support_tickets")
+      .select("*")
+      .order("created_at", { ascending: false });
+    data = rows ?? [];
+  } catch {
+    // Table not yet created — show empty state
+  }
 
   return (
     <div className="p-4 sm:p-6 md:p-8 pt-16 md:pt-8">

@@ -4,7 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AuthProvider from "@/components/AuthProvider";
-import { Toaster } from "react-hot-toast";
+import ToasterWithDismiss from "@/components/ToasterWithDismiss";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -35,7 +35,7 @@ export default function RootLayout({
           <Navbar />
           <main className="min-h-screen">{children}</main>
           <Footer />
-          <Toaster position="top-right" />
+          <ToasterWithDismiss />
         </AuthProvider>
       </body>
     </html>

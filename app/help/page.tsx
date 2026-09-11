@@ -47,13 +47,17 @@ export default async function HelpPage() {
   }[] = [];
 
   if (user) {
-    const { data } = await supabase
-      .from("support_tickets")
-      .select("id, category, subject, status, created_at, admin_reply")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(20);
-    myTickets = (data ?? []) as typeof myTickets;
+    try {
+      const { data } = await supabase
+        .from("support_tickets")
+        .select("id, category, subject, status, created_at, admin_reply")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      myTickets = (data ?? []) as typeof myTickets;
+    } catch {
+      // Table may not exist yet — fail silently
+    }
   }
 
   return (
