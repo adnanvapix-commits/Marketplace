@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { CreditCard, CheckCircle, Clock, ArrowUpCircle, RefreshCw } from "lucide-react";
+import { CreditCard, CheckCircle, Clock, ArrowUpCircle, ArrowDownCircle, RefreshCw } from "lucide-react";
 import SubscriptionBadge from "@/components/SubscriptionBadge";
 import type { SubscriptionTier } from "@/types";
 import toast from "react-hot-toast";
@@ -142,7 +142,7 @@ export default function SubscriptionClient({
         {isActive && daysLeft !== null && daysLeft <= 14 && (
           <div className="mt-4 pt-4 border-t border-green-200 flex items-center gap-2 text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
             <RefreshCw size={14} className="shrink-0" />
-            Expiring soon — tap WhatsApp below to renew before it expires.
+            Expiring soon — contact support to renew before it expires.
           </div>
         )}
       </div>
@@ -150,14 +150,33 @@ export default function SubscriptionClient({
       {/* Pricing plans */}
       <div className="mb-8">
         <h2 className="text-lg font-bold text-gray-800 mb-1">Available Plans</h2>
-        <p className="text-sm text-gray-500 mb-5">All prices in AED (UAE Dirhams) per month. Tap a plan to contact us on WhatsApp.</p>
+        <p className="text-sm text-gray-500 mb-5">All prices in AED (UAE Dirhams) per month.</p>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {plans.map(({ tier: planTier, icon, price, color, btnCls, features, popular }) => {
             const isCurrent = planTier === tier && isActive;
             const planIndex = plans.findIndex(p => p.tier === planTier);
             const currentIndex = plans.findIndex(p => p.tier === tier);
+            // Higher index = lower tier (beginner=0, expert=1, elite=2)
             const isUpgrade = planIndex > currentIndex;
+            const isDegrade = currentIndex > -1 && planIndex < currentIndex;
+
+            // Button label logic
+            let btnLabel: React.ReactNode;
+            if (!isActive || currentIndex === -1) {
+              btnLabel = <><CreditCard size={14} /> Subscribe</>;
+            } else if (isUpgrade) {
+              btnLabel = <><ArrowUpCircle size={14} /> Upgrade</>;
+            } else if (isDegrade) {
+              btnLabel = <><ArrowDownCircle size={14} /> Degrade</>;
+            } else {
+              btnLabel = <><CreditCard size={14} /> Subscribe</>;
+            }
+
+            // Degrade button gets muted style
+            const actionCls = isDegrade
+              ? "bg-gray-200 hover:bg-gray-300 text-gray-600"
+              : btnCls;
 
             return (
               <div key={planTier} className={`card p-5 relative flex flex-col ${color}`}>
@@ -202,12 +221,9 @@ export default function SubscriptionClient({
                     href={waLink(planTier, price)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`w-full text-center text-sm font-semibold py-2.5 rounded-xl transition-all active:scale-95 flex items-center justify-center gap-1.5 ${btnCls}`}
+                    className={`w-full text-center text-sm font-semibold py-2.5 rounded-xl transition-all active:scale-95 flex items-center justify-center gap-1.5 ${actionCls}`}
                   >
-                    {isUpgrade
-                      ? <><ArrowUpCircle size={14} /> Upgrade via WhatsApp</>
-                      : <><span>💬</span> Subscribe via WhatsApp</>
-                    }
+                    {btnLabel}
                   </a>
                 )}
               </div>
@@ -254,7 +270,7 @@ export default function SubscriptionClient({
               {isActive
                 ? <a href={`https://wa.me/${waNumber}?text=${encodeURIComponent(`Hi BULKORA, I'd like to renew my ${tier?.toUpperCase()} subscription. My account: ${userEmail}`)}`}
                     target="_blank" rel="noopener noreferrer"
-                    className="text-green-600 hover:underline font-medium">Renew via WhatsApp →</a>
+                    className="text-green-600 hover:underline font-medium">Renew →</a>
                 : <a href={`https://wa.me/${waNumber}?text=${encodeURIComponent(`Hi BULKORA, I'd like to subscribe. My account: ${userEmail}`)}`}
                     target="_blank" rel="noopener noreferrer"
                     className="text-primary hover:underline font-medium">Contact us to activate →</a>
@@ -267,14 +283,14 @@ export default function SubscriptionClient({
           </div>
         </div>
 
-        {/* WhatsApp CTA */}
+        {/* Contact Support CTA */}
         <a
           href={`https://wa.me/${waNumber}?text=${encodeURIComponent(`Hi BULKORA, I need help with my subscription. My account: ${userEmail}`)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-4 flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold text-sm transition-all active:scale-95"
+          className="mt-4 flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary hover:bg-primary-dark text-white font-semibold text-sm transition-all active:scale-95"
         >
-          <span className="text-base">💬</span> Contact Support on WhatsApp
+          Contact Support
         </a>
       </div>
     </>
