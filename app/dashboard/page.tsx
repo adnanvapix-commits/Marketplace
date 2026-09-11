@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import type { Product } from "@/types";
 import ProductCard from "@/components/ProductCard";
+import SubscriptionBadge from "@/components/SubscriptionBadge";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -53,6 +54,11 @@ export default async function DashboardPage() {
             {profileData?.company_name || user.email?.split("@")[0]}
           </h1>
           <p className="text-xs text-gray-400 truncate">{user.email}</p>
+          {profileData?.subscription_tier && (
+            <div className="mt-1">
+              <SubscriptionBadge tier={profileData.subscription_tier} size="sm" />
+            </div>
+          )}
         </div>
       </div>
 
@@ -78,11 +84,16 @@ export default async function DashboardPage() {
         <div className="card p-3 sm:p-4">
           <p className="text-xs text-gray-400 uppercase tracking-wide mb-1.5">Subscription</p>
           {subActive ? (
-            <span className="flex items-center gap-1 text-green-600 font-semibold text-xs sm:text-sm">
-              <CreditCard size={14} /> Active
-            </span>
+            <div className="flex flex-col gap-1">
+              <SubscriptionBadge tier={profileData?.subscription_tier ?? null} size="sm" />
+              {profileData?.subscription_expiry && (
+                <p className="text-[10px] text-gray-400 mt-0.5">
+                  Expires {new Date(profileData.subscription_expiry).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                </p>
+              )}
+            </div>
           ) : (
-            <Link href="/subscribe"
+            <Link href="/subscription"
               className="flex items-center gap-1 text-orange-500 font-semibold text-xs sm:text-sm hover:underline">
               <CreditCard size={14} /> Subscribe
             </Link>

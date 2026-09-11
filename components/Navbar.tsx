@@ -5,9 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home, ShoppingBag, PlusCircle, MessageCircle,
-  User, LogOut, Menu, X,
+  User, LogOut, Menu, X, CreditCard,
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
+import SubscriptionBadge from "./SubscriptionBadge";
+import type { SubscriptionTier } from "@/types";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -19,9 +21,8 @@ export default function Navbar() {
 
   const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@gmail.com";
   const isAdmin = role === "admin" || user?.email === ADMIN_EMAIL;
-  // Show logged-in links only once hydration confirms a user exists.
-  // Before hydration, treat as guest so Login button is always visible.
   const isLoggedIn = hydrated && !!user;
+  const subTier = (user?.user_metadata?.subscription_tier ?? null) as SubscriptionTier;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -87,6 +88,13 @@ export default function Navbar() {
                 <User size={15} className="shrink-0" /> Profile
               </Link>
 
+              <Link href="/subscription" className={`flex items-center gap-1.5 text-sm font-medium whitespace-nowrap transition-all duration-150 px-3 py-2 rounded-lg ${
+                isActive("/subscription") ? "text-primary bg-primary-light" : "text-gray-600 hover:text-primary hover:bg-cream-100"
+              }`}>
+                <CreditCard size={15} className="shrink-0" />
+                {subTier ? <SubscriptionBadge tier={subTier} size="sm" showIcon={false} /> : "Plan"}
+              </Link>
+
               <span className="w-px h-5 bg-cream-300 mx-1" />
 
               <form action="/api/auth/logout" method="POST">
@@ -144,6 +152,20 @@ export default function Navbar() {
                 />
                 <MobileLink href="/profile" icon={<User size={18} />} label="Profile"
                   active={isActive("/profile")} onClick={() => setOpen(false)} />
+
+                <Link
+                  href="/subscription"
+                  onClick={() => setOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                    isActive("/subscription")
+                      ? "bg-primary-light text-primary border border-primary/20"
+                      : "text-gray-700 hover:bg-cream-200"
+                  }`}
+                >
+                  <CreditCard size={18} className="shrink-0" />
+                  <span className="flex-1">Subscription</span>
+                  {subTier && <SubscriptionBadge tier={subTier} size="sm" />}
+                </Link>
 
                 <div className="border-t border-cream-200 my-2" />
 

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { PlusCircle, User, Pencil } from "lucide-react";
 import DeleteProductButton from "./DeleteProductButton";
 import VerificationBadge from "@/components/VerificationBadge";
+import SubscriptionBadge from "@/components/SubscriptionBadge";
 import type { Product } from "@/types";
 
 export default async function ProfilePage() {
@@ -57,7 +58,10 @@ export default async function ProfilePage() {
                 </span>
               ))}
               <VerificationBadge isVerified={profile?.is_verified ?? false} />
-              {profile?.is_subscribed && (
+              {profile?.subscription_tier && (
+                <SubscriptionBadge tier={profile.subscription_tier} size="sm" />
+              )}
+              {profile?.is_subscribed && !profile?.subscription_tier && (
                 <span className="text-xs px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 font-medium">✓ Subscribed</span>
               )}
             </div>
