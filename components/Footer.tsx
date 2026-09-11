@@ -48,9 +48,15 @@ export default function Footer() {
 
       {/* Bottom bar */}
       <div className="border-t border-cream-200 px-4 py-3">
-        <p className="text-center text-xs text-gray-400">
-          © {new Date().getFullYear()} BULKORA. All rights reserved.
-        </p>
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p className="text-xs text-gray-400">
+            © {new Date().getFullYear()} BULKORA. All rights reserved.
+          </p>
+          <div className="flex items-center gap-4">
+            <Link href="/terms" className="text-xs text-gray-400 hover:text-primary transition-colors">Terms & Conditions</Link>
+            <Link href="/privacy" className="text-xs text-gray-400 hover:text-primary transition-colors">Privacy Policy</Link>
+          </div>
+        </div>
       </div>
     </footer>
   );
