@@ -14,7 +14,7 @@ interface Props {
 type SubFilter = "all" | "active" | "expired" | "none";
 type Tier = "elite" | "expert" | "beginner" | null;
 
-// Pricing — internal only, never shown to end users
+// Pricing — monthly, internal only
 const TIER_PRICES: Record<string, number> = {
   elite: 1000,
   expert: 800,
@@ -141,7 +141,7 @@ export default function SubscriptionsTable({ initialUsers, adminId, tierEnabled 
                 <span className={`text-xs font-bold uppercase tracking-widest ${c.color}`}>{c.label}</span>
               </div>
               <p className={`text-2xl font-bold ${c.color}`}>{counts[tier]}</p>
-              <p className="text-xs text-gray-500 mt-0.5">AED {TIER_PRICES[tier].toLocaleString()} / mo</p>
+              <p className="text-xs text-gray-500 mt-0.5">AED {TIER_PRICES[tier].toLocaleString()} / month</p>
             </div>
           );
         })}
