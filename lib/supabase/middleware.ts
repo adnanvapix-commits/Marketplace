@@ -70,7 +70,7 @@ export async function updateSession(request: NextRequest) {
     }
 
     // 3. Login required
-    const loginRequired = ["/sell", "/buy", "/chat", "/dashboard", "/profile"];
+    const loginRequired = ["/sell", "/buy", "/chat", "/dashboard", "/profile", "/subscription", "/help", "/account"];
     const requiresLogin = loginRequired.some((p) => path.startsWith(p));
     if (requiresLogin && !user) {
       const url = request.nextUrl.clone();
@@ -78,7 +78,7 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // 4. Verification gating — use cached cookie to avoid DB hit on every request
+    // 4. Verification gating — /subscription and /help are accessible to all logged-in users (no verification needed)
     const verificationRequired = ["/sell", "/buy", "/chat", "/dashboard"];
     const requiresVerification = verificationRequired.some((p) => path.startsWith(p));
 

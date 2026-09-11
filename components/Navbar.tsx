@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home, ShoppingBag, PlusCircle, MessageCircle,
-  User, LogOut, Menu, X, CreditCard,
+  User, LogOut, Menu, X, CreditCard, LifeBuoy, Info,
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import SubscriptionBadge from "./SubscriptionBadge";
@@ -64,6 +64,12 @@ export default function Navbar() {
           </Link>
           <Link href="/buy" className={linkCls("/buy")}>
             <ShoppingBag size={15} className="shrink-0" /> Buy
+          </Link>
+          <Link href="/about" className={linkCls("/about")}>
+            <Info size={15} className="shrink-0" /> About
+          </Link>
+          <Link href="/help" className={linkCls("/help")}>
+            <LifeBuoy size={15} className="shrink-0" /> Help
           </Link>
 
           {isLoggedIn ? (
@@ -134,6 +140,10 @@ export default function Navbar() {
               active={isActive("/home")} onClick={() => setOpen(false)} />
             <MobileLink href="/buy" icon={<ShoppingBag size={18} />} label="Buy"
               active={isActive("/buy")} onClick={() => setOpen(false)} />
+            <MobileLink href="/about" icon={<Info size={18} />} label="About"
+              active={isActive("/about")} onClick={() => setOpen(false)} />
+            <MobileLink href="/help" icon={<LifeBuoy size={18} />} label="Help & Support"
+              active={isActive("/help")} onClick={() => setOpen(false)} />
 
             {isLoggedIn ? (
               <>

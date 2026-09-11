@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, ShoppingBag,
-  CreditCard, ScrollText, Menu, X, LogOut,
+  CreditCard, ScrollText, Menu, X, LogOut, LifeBuoy,
 } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -15,6 +15,7 @@ const links = [
   { href: "/admin/users",         label: "Users",         icon: Users },
   { href: "/admin/products",      label: "Products",      icon: ShoppingBag },
   { href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard },
+  { href: "/admin/tickets",       label: "Tickets",       icon: LifeBuoy },
   { href: "/admin/logs",          label: "Logs",          icon: ScrollText },
 ];
 
