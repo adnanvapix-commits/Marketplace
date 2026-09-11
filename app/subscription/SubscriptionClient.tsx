@@ -154,21 +154,21 @@ export default function SubscriptionClient({
             {(["quarterly", "annual"] as BillingPeriod[]).map((p) => (
               <button key={p}
                 onClick={() => setBilling(p)}
-                className={`relative px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   billing === p ? "bg-white text-primary shadow-soft" : "text-gray-500 hover:text-gray-700"
                 }`}
               >
                 {BILLING[p].label}
-                {BILLING[p].badge && billing !== p && p === "annual" && (
-                  <span className="absolute -top-2 -right-2 bg-green-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">
-                    {BILLING[p].discount}
-                  </span>
-                )}
                 {billing === p && BILLING[p].badge && (
                   <span className={`ml-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
                     p === "annual" ? "bg-green-100 text-green-700" : "bg-primary/10 text-primary"
                   }`}>
                     {BILLING[p].badge}
+                  </span>
+                )}
+                {billing !== p && p === "annual" && (
+                  <span className="ml-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-green-500 text-white">
+                    {BILLING[p].discount}
                   </span>
                 )}
               </button>
