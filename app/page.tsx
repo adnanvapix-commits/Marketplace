@@ -57,13 +57,13 @@ export default function LandingPage() {
 
         <div className="relative max-w-4xl mx-auto text-center animate-fade-in">
           {/* Pill badge */}
-          <div className="inline-flex items-center gap-2 bg-primary/5 text-primary-dark px-4 py-1.5 rounded-full text-xs font-semibold mb-4 sm:mb-6 border border-primary/15">
+          <div className="inline-flex items-center gap-2 bg-primary/5 text-primary px-4 py-1.5 rounded-full text-xs font-semibold mb-4 sm:mb-6 border border-primary/15">
             Dubai&apos;s Premier B2B Marketplace
           </div>
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 mb-4 sm:mb-5 leading-tight tracking-tight text-balance px-2">
             Trade Smarter with<br />
-            <span className="bg-gradient-to-r from-primary via-primary-dark to-primary bg-clip-text text-transparent">Verified Businesses</span>
+            <span className="text-brand-gradient">Verified Businesses</span>
           </h1>
 
           <p className="text-gray-600 text-sm sm:text-base md:text-lg mb-8 sm:mb-10 max-w-xl mx-auto leading-relaxed px-4">

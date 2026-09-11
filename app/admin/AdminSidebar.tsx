@@ -81,10 +81,14 @@ export default function AdminSidebar() {
     <>
       {/* Desktop sidebar */}
       <aside className="hidden md:flex flex-col w-56 shrink-0 bg-cream-50 border-r border-cream-200 min-h-screen sticky top-0">
-        <div className="h-16 flex items-center px-5 border-b border-cream-200 gap-2">
-          <span className="font-bold text-lg tracking-tight">
-            <span className="text-gold-gradient">BULK</span>
-            <span className="text-gray-700">ORA</span>
+        <div className="h-16 flex items-center px-5 border-b border-cream-200 gap-2.5">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+            style={{ background: "linear-gradient(135deg, #1B3A6B 0%, #2E8B57 100%)" }}>
+            <span className="text-white font-black text-base leading-none">B</span>
+          </div>
+          <span className="font-black text-base tracking-tight">
+            <span className="text-brand-gradient">BULK</span>
+            <span style={{ color: "#C8960C" }}>ORA</span>
           </span>
         </div>
         {nav}
@@ -99,9 +103,13 @@ export default function AdminSidebar() {
           {open ? <X size={20} /> : <Menu size={20} />}
         </button>
         <div className="flex items-center gap-1.5">
-          <span className="font-bold text-base tracking-tight">
-            <span className="text-gold-gradient">BULK</span>
-            <span className="text-gray-700">ORA</span>
+          <div className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
+            style={{ background: "linear-gradient(135deg, #1B3A6B 0%, #2E8B57 100%)" }}>
+            <span className="text-white font-black text-sm leading-none">B</span>
+          </div>
+          <span className="font-black text-base tracking-tight">
+            <span className="text-brand-gradient">BULK</span>
+            <span style={{ color: "#C8960C" }}>ORA</span>
           </span>
         </div>
       </div>
