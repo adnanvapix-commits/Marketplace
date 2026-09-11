@@ -1,12 +1,6 @@
 import { ShieldCheck, Zap, Globe, TrendingUp, Users, CheckCircle2, Building2, Award } from "lucide-react";
 import Link from "next/link";
-
-const STATS = [
-  { label: "Verified Businesses", value: "500+" },
-  { label: "Product Categories", value: "10+" },
-  { label: "Countries Served", value: "30+" },
-  { label: "Deals Facilitated", value: "1,200+" },
-];
+import { createClient } from "@/lib/supabase/server";
 
 const VALUES = [
   { icon: ShieldCheck, title: "Trust First", desc: "Every business on BULKORA is manually reviewed by our team. No fakes, no spam — only real, verified companies." },
@@ -22,7 +16,10 @@ const TEAM = [
   { name: "Technology", role: "Platform Development", icon: Award },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const isLoggedIn = !!user;
   return (
     <div className="min-h-screen bg-cream-50">
 
@@ -41,18 +38,6 @@ export default function AboutPage() {
           BULKORA connects verified wholesale buyers and sellers worldwide. We built a platform where trust,
           speed, and transparency make every trade smoother — from first contact to final deal.
         </p>
-      </section>
-
-      {/* Stats */}
-      <section className="bg-white border-y border-cream-200 py-8 px-4">
-        <div className="max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-6">
-          {STATS.map(({ label, value }) => (
-            <div key={label} className="text-center">
-              <p className="text-2xl sm:text-3xl font-bold text-primary">{value}</p>
-              <p className="text-xs text-gray-500 mt-1">{label}</p>
-            </div>
-          ))}
-        </div>
       </section>
 
       {/* Mission */}
@@ -147,9 +132,13 @@ export default function AboutPage() {
       {/* CTA */}
       <section className="max-w-2xl mx-auto px-4 py-14 text-center">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3">Ready to start trading?</h2>
-        <p className="text-gray-500 text-sm mb-6">Join hundreds of verified businesses already on BULKORA.</p>
+        <p className="text-gray-500 text-sm mb-6">Join verified businesses already on BULKORA.</p>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link href="/login" className="btn-primary text-sm px-6 py-3">Create Free Account</Link>
+          {isLoggedIn ? (
+            <Link href="/dashboard" className="btn-primary text-sm px-6 py-3">Go to Dashboard</Link>
+          ) : (
+            <Link href="/login" className="btn-primary text-sm px-6 py-3">Create Free Account</Link>
+          )}
           <Link href="/help" className="btn-outline text-sm px-6 py-3">Get Help</Link>
         </div>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs text-gray-400">
