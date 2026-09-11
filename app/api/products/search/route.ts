@@ -16,18 +16,28 @@ const TIER_PRIORITY: Record<string, number> = {
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
 
-  // ── Auth + access check (single parallel call) ─────────────────────────
+  // ── Auth check — JWT only, zero DB calls ───────────────────────────────
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data: profile } = await supabase
-    .from("users")
-    .select("is_verified, is_subscribed, role")
-    .eq("id", user.id)
-    .single();
+  // Read role/verification from JWT metadata (populated by DB trigger, no DB call)
+  const meta = user.user_metadata ?? {};
+  const isAdmin = meta.role === "admin" || user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+  const isVerified = meta.is_verified === true;
+  const isSubscribed = meta.is_subscribed === true;
 
-  const isAdmin = profile?.role === "admin";
-  const hasAccess = isAdmin || (profile?.is_verified && profile?.is_subscribed);
+  // Fallback: if JWT metadata not yet populated, do a single DB call
+  let hasAccess = isAdmin || (isVerified && isSubscribed);
+  if (!hasAccess && !isAdmin) {
+    const { data: profile } = await supabase
+      .from("users")
+      .select("is_verified, is_subscribed, role")
+      .eq("id", user.id)
+      .single();
+    const dbAdmin = profile?.role === "admin";
+    hasAccess = dbAdmin || (profile?.is_verified && profile?.is_subscribed) || false;
+  }
+
   if (!hasAccess) return NextResponse.json({ error: "Access denied" }, { status: 403 });
 
   // ── Parse query params ──────────────────────────────────────────────────

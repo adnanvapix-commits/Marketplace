@@ -110,3 +110,48 @@ END $$;
 -- 2. Products from Elite sellers appear first in search results
 -- 3. Admin panel shows conversation count correctly
 -- ============================================================
+
+-- ============================================================
+-- Performance Indexes
+-- Run these in Supabase SQL Editor for fast page loads
+-- ============================================================
+
+-- Messages: fast inbox query (order by created_at, filter by sender/receiver)
+CREATE INDEX IF NOT EXISTS idx_messages_created_at
+  ON public.messages (created_at DESC);
+
+-- Messages: composite index for inbox query (sender OR receiver + created_at)
+CREATE INDEX IF NOT EXISTS idx_messages_sender_created
+  ON public.messages (sender_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_messages_receiver_created
+  ON public.messages (receiver_id, created_at DESC);
+
+-- Messages: composite for chat window query (product + both parties)
+CREATE INDEX IF NOT EXISTS idx_messages_product_sender_receiver
+  ON public.messages (product_id, sender_id, receiver_id);
+
+-- Products: composite for the main search query (active + not blocked + category)
+CREATE INDEX IF NOT EXISTS idx_products_active_blocked
+  ON public.products (is_active, is_blocked);
+
+CREATE INDEX IF NOT EXISTS idx_products_active_category
+  ON public.products (is_active, is_blocked, category);
+
+-- Products: text search speedup (title, brand)
+CREATE INDEX IF NOT EXISTS idx_products_title_trgm
+  ON public.products USING gin (title gin_trgm_ops);
+
+CREATE INDEX IF NOT EXISTS idx_products_brand_trgm
+  ON public.products USING gin (brand gin_trgm_ops);
+
+-- Enable pg_trgm extension for the trigram indexes above
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+-- Users: fast single-row lookup by id (usually primary key, but explicit for planner)
+CREATE INDEX IF NOT EXISTS idx_users_id_role
+  ON public.users (id, role, is_verified, is_subscribed);
+
+-- ============================================================
+-- INDEXES COMPLETE — pages should now load significantly faster
+-- ============================================================
