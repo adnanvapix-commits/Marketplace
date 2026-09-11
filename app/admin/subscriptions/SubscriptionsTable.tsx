@@ -14,11 +14,11 @@ interface Props {
 type SubFilter = "all" | "active" | "expired" | "none";
 type Tier = "elite" | "expert" | "beginner" | null;
 
-// Pricing — monthly, internal only
-const TIER_PRICES: Record<string, number> = {
-  elite: 1000,
-  expert: 800,
-  beginner: 500,
+// Pricing — quarterly (3-month minimum) and annual
+const TIER_PRICES: Record<string, { monthly: number; quarterly: number; annual: number }> = {
+  elite:    { monthly: 1000, quarterly: 3000, annual: 10000 },
+  expert:   { monthly: 800,  quarterly: 2400, annual: 8000  },
+  beginner: { monthly: 500,  quarterly: 1500, annual: 5000  },
 };
 
 const TIER_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; icon: React.ElementType }> = {
@@ -141,7 +141,9 @@ export default function SubscriptionsTable({ initialUsers, adminId, tierEnabled 
                 <span className={`text-xs font-bold uppercase tracking-widest ${c.color}`}>{c.label}</span>
               </div>
               <p className={`text-2xl font-bold ${c.color}`}>{counts[tier]}</p>
-              <p className="text-xs text-gray-500 mt-0.5">AED {TIER_PRICES[tier].toLocaleString()} / month</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                AED {TIER_PRICES[tier].quarterly.toLocaleString()} / qtr · AED {TIER_PRICES[tier].annual.toLocaleString()} / yr
+              </p>
             </div>
           );
         })}
@@ -206,7 +208,7 @@ export default function SubscriptionsTable({ initialUsers, adminId, tierEnabled 
                                 key={t}
                                 onClick={() => handleSetTier(user, active ? null : t)}
                                 disabled={loading === user.id + "_tier"}
-                                title={`${active ? "Remove" : "Set"} ${c.label} (AED ${TIER_PRICES[t]})`}
+                                title={`${active ? "Remove" : "Set"} ${c.label} (AED ${TIER_PRICES[t].quarterly}/qtr)`}
                                 className={`text-[10px] px-1.5 py-0.5 rounded border font-semibold transition-all disabled:opacity-40 ${
                                   active
                                     ? `${c.bg} ${c.color} ${c.border}`
