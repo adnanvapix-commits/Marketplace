@@ -177,7 +177,7 @@ function BuyPageInner() {
           {error.includes("Access denied") && (
             <p className="text-gray-400 text-xs mt-2">
               Your account needs to be verified and subscribed to view listings.
-              Contact admin or go to <a href="/subscribe" className="text-primary underline">Subscribe</a>.
+              Contact admin or go to <a href="/subscription" className="text-primary underline">Subscribe</a>.
             </p>
           )}
           {error.includes("Unauthorized") && (

@@ -35,7 +35,7 @@ export default function PendingPage() {
     }
 
     if (data?.is_verified && !data?.is_subscribed) {
-      router.push("/subscribe");
+      router.push("/subscription");
       return;
     }
 
@@ -114,7 +114,7 @@ export default function PendingPage() {
             <p className="text-gray-500 text-sm mb-4">
               Your account has been verified. You need an active subscription to access the marketplace.
             </p>
-            <button onClick={() => router.push("/subscribe")} className="btn-primary w-full">
+            <button onClick={() => router.push("/subscription")} className="btn-primary w-full">
               View Subscription Plans
             </button>
           </>
