@@ -236,9 +236,7 @@ export default function LandingPage() {
               </li>
             ))}
           </ul>
-          <Link href="/login" className="btn-primary inline-flex items-center gap-2 px-8 py-3 text-base">
-            Get Started Free <ArrowRight size={16} />
-          </Link>
+          <HeroCTA variant="button" />
         </div>
       </section>
 
