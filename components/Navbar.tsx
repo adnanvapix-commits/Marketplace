@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home, ShoppingBag, PlusCircle, MessageCircle,
-  User, LogOut, Menu, X, CreditCard, LifeBuoy, Info,
+  User, LogOut, Menu, X, CreditCard, LifeBuoy, Info, LayoutDashboard, Shield,
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import SubscriptionBadge from "./SubscriptionBadge";
@@ -86,7 +86,7 @@ export default function Navbar() {
               </NavLink>
 
               <NavLink href={isAdmin ? "/admin" : "/dashboard"}>
-                <User size={15} className="shrink-0" />
+                {isAdmin ? <Shield size={15} className="shrink-0" /> : <LayoutDashboard size={15} className="shrink-0" />}
                 {isAdmin ? "Admin" : "Dashboard"}
               </NavLink>
 
@@ -155,7 +155,7 @@ export default function Navbar() {
 
                 <MobileLink
                   href={isAdmin ? "/admin" : "/dashboard"}
-                  icon={<User size={18} />}
+                  icon={isAdmin ? <Shield size={18} /> : <LayoutDashboard size={18} />}
                   label={isAdmin ? "Admin Dashboard" : "Dashboard"}
                   active={isActive(isAdmin ? "/admin" : "/dashboard")}
                   onClick={() => setOpen(false)}

@@ -152,17 +152,19 @@ function HomeInner() {
           </div>
         </div>
 
-        {/* Buy / Sell */}
-        <div className="flex gap-3 mb-5">
-          <button onClick={handleBuy}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors">
-            <ShoppingBag size={16} /> Buy
-          </button>
-          <button onClick={handleSell}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-primary text-primary text-sm font-semibold hover:bg-primary/5 transition-colors">
-            <PlusCircle size={16} /> Sell
-          </button>
-        </div>
+        {/* Buy / Sell quick actions — shown only to verified users */}
+        {hydrated && isLoggedIn && isVerified && (
+          <div className="flex gap-2 mb-4">
+            <button onClick={handleBuy}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors">
+              <ShoppingBag size={15} /> Browse All
+            </button>
+            <button onClick={handleSell}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-primary text-primary text-sm font-semibold hover:bg-primary/5 transition-colors">
+              <PlusCircle size={15} /> Post Listing
+            </button>
+          </div>
+        )}
 
         <div className="flex flex-col md:flex-row gap-4 md:gap-6">
           <FilterSidebar
@@ -177,36 +179,59 @@ function HomeInner() {
             {loading && (
               <div className="flex flex-col gap-2">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="skeleton h-20 rounded-2xl" />
+                  <div key={i} className="card flex gap-0 overflow-hidden h-20 animate-pulse">
+                    <div className="w-20 bg-cream-200 shrink-0" />
+                    <div className="flex-1 p-3 space-y-2">
+                      <div className="h-4 bg-cream-200 rounded w-3/4" />
+                      <div className="h-3 bg-cream-100 rounded w-1/2" />
+                      <div className="h-3 bg-cream-100 rounded w-1/3" />
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
 
+            {/* Error */}
             {error && !loading && (
-              <div className="card p-6 text-center">
-                <p className="text-red-500 text-sm font-medium">{error}</p>
+              <div className="card p-8 text-center">
+                <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+                  <ShoppingBag size={24} className="text-red-400" />
+                </div>
+                <p className="text-red-500 text-sm font-semibold mb-1">Could not load listings</p>
+                <p className="text-gray-400 text-xs mb-4">{error}</p>
+                <button onClick={fetchProducts} className="btn-primary text-sm">Try Again</button>
               </div>
             )}
 
             {!loading && !error && (
               <>
+                {/* Meta row */}
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-sm text-gray-500">
                     <span className="font-semibold text-gray-700">{count.toLocaleString()}</span>{" "}
                     product{count !== 1 ? "s" : ""} found
-                    {debouncedQuery && <span> for <span className="font-medium text-gray-700">&quot;{debouncedQuery}&quot;</span></span>}
+                    {debouncedQuery && (
+                      <span> for <span className="font-medium text-gray-700">&quot;{debouncedQuery}&quot;</span></span>
+                    )}
                   </p>
                   <button onClick={clearAll} className="text-xs text-red-500 hover:underline flex items-center gap-1">
                     <X size={12} /> Clear all
                   </button>
                 </div>
 
+                {/* Empty state */}
                 {products.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-                    <ShoppingBag size={48} className="mb-4 opacity-20" />
-                    <p className="font-medium text-gray-600">No products found</p>
-                    <p className="text-sm mt-1">Try different keywords or adjust your filters</p>
-                    <button onClick={clearAll} className="btn-outline text-sm mt-4">Clear Filters</button>
+                  <div className="card p-12 text-center">
+                    <div className="w-16 h-16 rounded-full bg-cream-100 flex items-center justify-center mx-auto mb-4">
+                      <ShoppingBag size={28} className="text-gray-300" />
+                    </div>
+                    <p className="font-semibold text-gray-700 mb-1">No products found</p>
+                    <p className="text-sm text-gray-400 mb-5">
+                      {debouncedQuery
+                        ? `No results for "${debouncedQuery}". Try different keywords.`
+                        : "Try adjusting your filters."}
+                    </p>
+                    <button onClick={clearAll} className="btn-outline text-sm">Clear Filters</button>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-2">
