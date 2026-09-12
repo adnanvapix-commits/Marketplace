@@ -41,8 +41,10 @@ export default function Navbar() {
         : "text-gray-600 hover:text-primary hover:bg-cream-100"
     }`;
 
-  // Prefetch key routes on mount for instant navigation
-  const prefetchRoutes = ["/home", "/buy", "/dashboard", "/profile", "/chat", "/subscription"];
+  // All nav links use prefetch for instant navigation
+  const NavLink = ({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) => (
+    <Link href={href} prefetch className={className ?? linkCls(href)}>{children}</Link>
+  );
 
   return (
     <nav className={`sticky top-0 z-50 transition-all duration-300 ${
@@ -60,42 +62,39 @@ export default function Navbar() {
 
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-1">
-          <Link href="/home" className={linkCls("/home")}>
+          <NavLink href="/">
             <Home size={15} className="shrink-0" /> Home
-          </Link>
-          <Link href="/buy" className={linkCls("/buy")}>
+          </NavLink>
+          <NavLink href="/buy">
             <ShoppingBag size={15} className="shrink-0" /> Buy
-          </Link>
-          <Link href="/about" className={linkCls("/about")}>
+          </NavLink>
+          <NavLink href="/about">
             <Info size={15} className="shrink-0" /> About
-          </Link>
-          <Link href="/help" className={linkCls("/help")}>
+          </NavLink>
+          <NavLink href="/help">
             <LifeBuoy size={15} className="shrink-0" /> Help
-          </Link>
+          </NavLink>
 
           {isLoggedIn ? (
             <>
-              <Link href="/sell" className={linkCls("/sell")}>
+              <NavLink href="/sell">
                 <PlusCircle size={15} className="shrink-0" /> Sell
-              </Link>
+              </NavLink>
 
-              <Link href="/chat" className={linkCls("/chat")}>
+              <NavLink href="/chat">
                 <MessageCircle size={15} className="shrink-0" /> Chat
-              </Link>
+              </NavLink>
 
-              <Link
-                href={isAdmin ? "/admin" : "/dashboard"}
-                className={linkCls(isAdmin ? "/admin" : "/dashboard")}
-              >
+              <NavLink href={isAdmin ? "/admin" : "/dashboard"}>
                 <User size={15} className="shrink-0" />
                 {isAdmin ? "Admin" : "Dashboard"}
-              </Link>
+              </NavLink>
 
-              <Link href="/profile" className={linkCls("/profile")}>
+              <NavLink href="/profile">
                 <User size={15} className="shrink-0" /> Profile
-              </Link>
+              </NavLink>
 
-              <Link href="/subscription" className={`flex items-center gap-1.5 text-sm font-medium whitespace-nowrap transition-all duration-150 px-3 py-2 rounded-lg ${
+              <Link href="/subscription" prefetch className={`flex items-center gap-1.5 text-sm font-medium whitespace-nowrap transition-all duration-150 px-3 py-2 rounded-lg ${
                 isActive("/subscription") ? "text-primary bg-primary-light" : "text-gray-600 hover:text-primary hover:bg-cream-100"
               }`}>
                 <CreditCard size={15} className="shrink-0" />
@@ -137,8 +136,8 @@ export default function Navbar() {
       {open && (
         <div className="md:hidden border-t border-cream-200 bg-cream-50/95 backdrop-blur-md shadow-soft-md">
           <div className="px-4 py-4 flex flex-col gap-1">
-            <MobileLink href="/home" icon={<Home size={18} />} label="Home"
-              active={isActive("/home")} onClick={() => setOpen(false)} />
+            <MobileLink href="/" icon={<Home size={18} />} label="Home"
+              active={isActive("/")} onClick={() => setOpen(false)} />
             <MobileLink href="/buy" icon={<ShoppingBag size={18} />} label="Buy"
               active={isActive("/buy")} onClick={() => setOpen(false)} />
             <MobileLink href="/about" icon={<Info size={18} />} label="About"
@@ -214,6 +213,7 @@ function MobileLink({
     <Link
       href={href}
       onClick={onClick}
+      prefetch={true}
       className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
         active
           ? "bg-primary-light text-primary border border-primary/20"

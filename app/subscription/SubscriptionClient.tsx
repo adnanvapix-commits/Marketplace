@@ -149,37 +149,33 @@ export default function SubscriptionClient({
 
       {/* Billing period toggle */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <h2 className="text-lg font-bold text-gray-800">Available Plans</h2>
-          <div className="flex bg-cream-100 rounded-xl p-1 gap-1">
-            {(["quarterly", "annual"] as BillingPeriod[]).map((p) => (
-              <button key={p}
-                onClick={() => setBilling(p)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  billing === p ? "bg-white text-primary shadow-soft" : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                {BILLING[p].label}
-                {billing === p && BILLING[p].badge && (
-                  <span className={`ml-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                    p === "annual" ? "bg-green-100 text-green-700" : "bg-primary/10 text-primary"
-                  }`}>
-                    {BILLING[p].badge}
-                  </span>
-                )}
-                {billing !== p && p === "annual" && (
-                  <span className="ml-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-green-500 text-white">
-                    {BILLING[p].discount}
-                  </span>
-                )}
-              </button>
-            ))}
+          <div className="flex bg-cream-100 rounded-xl p-1 gap-1 self-start sm:self-auto">
+            <button onClick={() => setBilling("quarterly")}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                billing === "quarterly" ? "bg-white text-primary shadow-soft" : "text-gray-500 hover:text-gray-700"
+              }`}>
+              3 Months
+              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                billing === "quarterly" ? "bg-primary/10 text-primary" : "bg-gray-200 text-gray-500"
+              }`}>Min</span>
+            </button>
+            <button onClick={() => setBilling("annual")}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                billing === "annual" ? "bg-white text-primary shadow-soft" : "text-gray-500 hover:text-gray-700"
+              }`}>
+              Annual
+              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                billing === "annual" ? "bg-green-100 text-green-700" : "bg-green-500 text-white"
+              }`}>Save 2mo</span>
+            </button>
           </div>
         </div>
         <p className="text-xs text-gray-400">
           {billing === "quarterly"
-            ? "Minimum 3-month commitment. All prices in AED (UAE Dirhams)."
-            : "Annual plan — pay for 10 months, get 12 months (2 months free). All prices in AED."}
+            ? "Minimum 3-month commitment. Prices in AED."
+            : "Annual — 2 months free. Prices in AED."}
         </p>
       </div>
 
