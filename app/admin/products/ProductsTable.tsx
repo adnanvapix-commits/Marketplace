@@ -86,7 +86,7 @@ export default function ProductsTable({ initialProducts, adminId }: Props) {
                   {product.users?.email ?? product.user_id.slice(0, 8)}
                 </td>
                 <td className="px-4 py-3 text-xs text-gray-500">
-                  {new Date(product.created_at).toLocaleDateString()}
+                  {new Date(product.created_at).toLocaleDateString("en-GB")}
                 </td>
                 <td className="px-4 py-3">
                   <span className={`text-xs px-2 py-1 rounded-full font-medium ${product.is_blocked ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"}`}>

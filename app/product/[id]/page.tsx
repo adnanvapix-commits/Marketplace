@@ -50,9 +50,7 @@ export default async function ProductDetailPage({
           )}
           <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-lg text-xs">
             <Calendar size={12} className="text-primary shrink-0" />
-            {new Date(p.created_at).toLocaleDateString("en-US", {
-              year: "numeric", month: "short", day: "numeric",
-            })}
+            {new Date(p.created_at).toLocaleDateString("en-GB")}
           </span>
           <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-lg text-xs">
             <Tag size={12} className="text-primary shrink-0" /> {p.category}

@@ -198,7 +198,7 @@ export default function ChatWindow({ currentUserId, otherUserId, otherUserName, 
               }`}>
                 <div className="break-words">{renderMessage(sanitizeMessage(msg.message))}</div>
                 <p className={`text-xs mt-1 ${isMine ? "text-blue-200" : "text-gray-400"}`}>
-                  {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(msg.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true })}
                 </p>
               </div>
             </div>

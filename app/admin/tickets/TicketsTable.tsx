@@ -141,7 +141,7 @@ export default function TicketsTable({ initialTickets }: { initialTickets: Ticke
                     </div>
                     <p className="font-semibold text-gray-800 text-sm truncate">{ticket.subject}</p>
                     <p className="text-xs text-gray-400 mt-0.5">
-                      {ticket.user_email} · {new Date(ticket.created_at).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}
+                      {ticket.user_email} · {new Date(ticket.created_at).toLocaleDateString("en-GB")}
                     </p>
                   </div>
                   {isExpanded ? <ChevronUp size={16} className="text-gray-400 shrink-0 mt-1" /> : <ChevronDown size={16} className="text-gray-400 shrink-0 mt-1" />}

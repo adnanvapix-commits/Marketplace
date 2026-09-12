@@ -88,7 +88,7 @@ export default async function DashboardPage() {
               <SubscriptionBadge tier={profileData?.subscription_tier ?? null} size="sm" />
               {profileData?.subscription_expiry && (
                 <p className="text-[10px] text-gray-400 mt-0.5">
-                  Expires {new Date(profileData.subscription_expiry).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  Expires {new Date(profileData.subscription_expiry).toLocaleDateString("en-GB")}
                 </p>
               )}
             </div>

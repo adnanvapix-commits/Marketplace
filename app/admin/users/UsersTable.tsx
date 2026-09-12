@@ -213,7 +213,7 @@ export default function UsersTable({ initialUsers, adminId }: Props) {
 
                   {/* Member Since */}
                   <td className="px-4 py-3 text-xs text-gray-500">
-                    {new Date(user.created_at).toLocaleDateString()}
+                    {new Date(user.created_at).toLocaleDateString("en-GB")}
                   </td>
 
                   {/* Role */}
@@ -262,7 +262,7 @@ export default function UsersTable({ initialUsers, adminId }: Props) {
                   {/* Expiry */}
                   <td className="px-4 py-3 text-xs text-gray-500">
                     {user.subscription_expiry
-                      ? new Date(user.subscription_expiry).toLocaleDateString()
+                      ? new Date(user.subscription_expiry).toLocaleDateString("en-GB")
                       : "—"}
                   </td>
 

@@ -89,7 +89,7 @@ export default async function ChatInboxPage() {
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
                   <span className="text-xs text-gray-400">
-                    {new Date(m.created_at).toLocaleDateString()}
+                    {new Date(m.created_at).toLocaleDateString("en-GB")}
                   </span>
                   <ChevronRight size={14} className="text-gray-300" />
                 </div>

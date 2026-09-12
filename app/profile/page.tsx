@@ -78,7 +78,7 @@ export default async function ProfilePage() {
           {[
             { label: "Phone", value: profile?.phone },
             { label: "Country", value: profile?.country },
-            { label: "Member Since", value: new Date(user.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long" }) },
+            { label: "Member Since", value: new Date(user.created_at).toLocaleDateString("en-GB") },
           ].map(({ label, value }) => (
             <div key={label}>
               <p className="text-xs text-gray-400 uppercase tracking-wide mb-0.5">{label}</p>

@@ -285,7 +285,7 @@ export default function HelpClient({ faqs, isLoggedIn, userEmail, myTickets: ini
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="min-w-0">
                       <p className="font-semibold text-gray-800 text-sm truncate">{ticket.subject}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{catLabel} · {new Date(ticket.created_at).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{catLabel} · {new Date(ticket.created_at).toLocaleDateString("en-GB")}</p>
                     </div>
                     <span className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border shrink-0 ${statusCfg.cls}`}>
                       <Icon size={11} /> {statusCfg.label}

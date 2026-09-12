@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { CreditCard, CheckCircle, Clock, ArrowUpCircle, ArrowDownCircle, RefreshCw, Tag } from "lucide-react";
 import SubscriptionBadge from "@/components/SubscriptionBadge";
 import type { SubscriptionTier } from "@/types";
+import { formatDate } from "@/lib/utils/formatDate";
 import toast from "react-hot-toast";
 
 type BillingPeriod = "quarterly" | "annual";
@@ -123,7 +124,7 @@ export default function SubscriptionClient({
               <>
                 <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Expiry Date</p>
                 <p className="text-base font-bold text-gray-800">
-                  {expiry.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })}
+                  {formatDate(expiry)}
                 </p>
                 <p className={`text-xs font-medium ${daysLeft && daysLeft <= 7 ? "text-red-500" : "text-green-600"}`}>
                   {daysLeft && daysLeft > 0 ? `${daysLeft} days remaining` : "Expires today"}
@@ -276,9 +277,7 @@ export default function SubscriptionClient({
           </div>
           <div className="flex items-center justify-between py-3">
             <span className="text-sm text-gray-500">Expiry Date</span>
-            <span className="text-sm font-semibold text-gray-800">
-              {expiry ? expiry.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" }) : "—"}
-            </span>
+            <span className="text-sm font-semibold text-gray-800">{formatDate(expiry)}</span>
           </div>
           <div className="flex items-center justify-between py-3">
             <span className="text-sm text-gray-500">Days Remaining</span>

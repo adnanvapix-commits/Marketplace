@@ -69,7 +69,7 @@ export default async function AdminLogsPage() {
                         {log.details ? JSON.stringify(log.details) : "—"}
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-500">
-                        {new Date(log.created_at).toLocaleString()}
+                        {new Date(log.created_at).toLocaleDateString("en-GB")} {new Date(log.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true })}
                       </td>
                     </tr>
                   );
