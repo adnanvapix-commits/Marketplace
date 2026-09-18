@@ -32,15 +32,7 @@ const FEATURES = [
 
 const CATEGORY_ICONS: Record<string, string> = {
   "Electronics": "💻",
-  "Clothing & Apparel": "👗",
-  "Food & Beverages": "🥤",
-  "Construction Materials": "🏗️",
-  "Machinery & Equipment": "⚙️",
-  "Chemicals": "🧪",
-  "Automotive": "🚗",
-  "Medical Supplies": "🏥",
-  "Furniture": "🪑",
-  "Packaging": "📦",
+  "Packaging":   "📦",
 };
 
 export default function LandingPage() {

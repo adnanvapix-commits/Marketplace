@@ -55,14 +55,6 @@ export interface Message {
 
 export const CATEGORIES = [
   "Electronics",
-  "Clothing & Apparel",
-  "Food & Beverages",
-  "Construction Materials",
-  "Machinery & Equipment",
-  "Chemicals",
-  "Automotive",
-  "Medical Supplies",
-  "Furniture",
   "Packaging",
 ] as const;
 
