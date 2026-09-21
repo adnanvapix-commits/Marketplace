@@ -105,28 +105,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Dubai Skyline Image ── */}
-      <section className="relative overflow-hidden bg-cream-50">
-        <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
-          <div className="relative rounded-2xl overflow-hidden shadow-cream-lg border border-cream-200">
-            {/* Overlay with text */}
-            <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-            <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 z-20">
-              <p className="text-white font-bold text-sm sm:text-base">Dubai, UAE</p>
-              <p className="text-white/70 text-xs sm:text-sm">World&apos;s premier trade hub</p>
-            </div>
-            {/* Dubai skyline image via Unsplash */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1600&q=80&auto=format&fit=crop"
-              alt="Dubai skyline — the world's premier trade hub"
-              className="w-full object-cover h-48 sm:h-64 md:h-80"
-              loading="lazy"
-            />
-          </div>
-        </div>
-      </section>
-
       {/* ── Trust bar ── */}
       <section className="bg-cream-100 border-y border-cream-200 py-4 px-4 overflow-hidden">
         <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
