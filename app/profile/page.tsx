@@ -8,6 +8,9 @@ import VerificationBadge from "@/components/VerificationBadge";
 import SubscriptionBadge from "@/components/SubscriptionBadge";
 import type { Product } from "@/types";
 
+// Cache 30s — reduces DB calls per page visit
+export const revalidate = 30;
+
 export default async function ProfilePage() {
   const supabase = await createClient();
 

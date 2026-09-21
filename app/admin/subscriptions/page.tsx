@@ -4,6 +4,9 @@ import SubscriptionsTable from "./SubscriptionsTable";
 import type { AdminUser } from "@/lib/services/adminService";
 import Link from "next/link";
 
+// Cache for 30s — prevents DB calls on every navigation click
+export const revalidate = 30;
+
 export default async function AdminSubscriptionsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

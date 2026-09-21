@@ -2,6 +2,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import ProductsTable from "./ProductsTable";
 
+// Cache for 30s — prevents DB calls on every navigation click
+export const revalidate = 30;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RawProduct = Record<string, any>;
 

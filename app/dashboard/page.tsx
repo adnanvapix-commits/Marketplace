@@ -8,6 +8,9 @@ import {
 } from "lucide-react";
 import type { Product } from "@/types";
 import ProductCard from "@/components/ProductCard";
+
+// Cache 30s — reduces DB calls, user data doesn't change every second
+export const revalidate = 30;
 import SubscriptionBadge from "@/components/SubscriptionBadge";
 
 export default async function DashboardPage() {

@@ -1,6 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import TicketsTable from "./TicketsTable";
 
+// Cache for 30s
+export const revalidate = 30;
+
 export default async function AdminTicketsPage() {
   const db = createAdminClient();
   let data = [];
