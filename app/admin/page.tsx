@@ -12,38 +12,31 @@ export default async function AdminDashboard() {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
   const sevenDaysFromNow = new Date(Date.now() + 7 * 86400000).toISOString();
 
-  const [
-    usersRes, productsRes, conversationsRes,
-    newUsersRes, pendingRes, expiringRes, topProductsRes, openTicketsRes,
-    activeSubsRes, expiredSubsRes, tiersRes,
-  ] = await Promise.all([
+  // Batch 1: counts only (head queries = minimal data transfer)
+  const [usersRes, productsRes, newUsersRes, openTicketsRes, activeSubsRes, expiredSubsRes] = await Promise.all([
     db.from("users").select("id", { count: "exact", head: true }),
     db.from("products").select("id", { count: "exact", head: true }).eq("is_active", true),
-    db.rpc("count_conversations"),
     db.from("users").select("id", { count: "exact", head: true }).gte("created_at", thirtyDaysAgo),
+    db.from("support_tickets").select("id", { count: "exact", head: true }).eq("status", "open"),
+    db.from("users").select("id", { count: "exact", head: true }).eq("is_subscribed", true).or(`subscription_expiry.is.null,subscription_expiry.gt.${now.toISOString()}`),
+    db.from("users").select("id", { count: "exact", head: true }).eq("is_subscribed", true).lt("subscription_expiry", now.toISOString()),
+  ]);
+
+  // Batch 2: data queries (run after counts so connection load is spread)
+  const [conversationsRes, pendingRes, expiringRes, topProductsRes] = await Promise.all([
+    db.rpc("count_conversations"),
     db.from("users").select("id, email, full_name, company_name, created_at").eq("verification_status", "pending").eq("is_verified", false).order("created_at", { ascending: false }).limit(5),
     db.from("users").select("id, email, company_name, subscription_expiry, subscription_tier").eq("is_subscribed", true).lte("subscription_expiry", sevenDaysFromNow).gt("subscription_expiry", now.toISOString()).order("subscription_expiry", { ascending: true }).limit(5),
     db.from("products").select("id, title, view_count, category").eq("is_active", true).order("view_count", { ascending: false }).limit(5),
-    db.from("support_tickets").select("id", { count: "exact", head: true }).eq("status", "open"),
-    // Fast count queries instead of fetching all rows
-    db.from("users").select("id", { count: "exact", head: true }).eq("is_subscribed", true).or(`subscription_expiry.is.null,subscription_expiry.gt.${now.toISOString()}`),
-    db.from("users").select("id", { count: "exact", head: true }).eq("is_subscribed", true).lt("subscription_expiry", now.toISOString()),
-    db.from("users").select("subscription_tier", { count: "exact" }).eq("is_subscribed", true).not("subscription_tier", "is", null),
   ]);
 
   const activeSubs  = activeSubsRes.count ?? 0;
   const expiredSubs = expiredSubsRes.count ?? 0;
-  // Build tier counts from the grouped data
+
+  // Tier counts: single query, compute in JS
+  const { data: tierData } = await db.from("users").select("subscription_tier").eq("is_subscribed", true).not("subscription_tier", "is", null);
   const tiers = { elite: 0, expert: 0, beginner: 0 } as Record<string, number>;
-  // We need tier breakdown - use a targeted query
-  const [eliteCount, expertCount, beginnerCount] = await Promise.all([
-    db.from("users").select("id", { count: "exact", head: true }).eq("is_subscribed", true).eq("subscription_tier", "elite"),
-    db.from("users").select("id", { count: "exact", head: true }).eq("is_subscribed", true).eq("subscription_tier", "expert"),
-    db.from("users").select("id", { count: "exact", head: true }).eq("is_subscribed", true).eq("subscription_tier", "beginner"),
-  ]);
-  tiers.elite    = eliteCount.count    ?? 0;
-  tiers.expert   = expertCount.count   ?? 0;
-  tiers.beginner = beginnerCount.count ?? 0;
+  (tierData ?? []).forEach(u => { if (u.subscription_tier) tiers[u.subscription_tier] = (tiers[u.subscription_tier] ?? 0) + 1; });
 
   const statCards = [
     { label: "Total Users",     value: usersRes.count ?? 0,         icon: Users,         color: "bg-blue-50 text-blue-600",     href: "/admin/users" },

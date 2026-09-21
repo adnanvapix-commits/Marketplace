@@ -132,22 +132,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Trust bar ── */}
-      <section className="bg-cream-100 border-y border-cream-200 py-4 px-4 overflow-hidden">
-        <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
-          {[
-            "✅ Admin-verified sellers",
-            "🔒 Secure transactions",
-            "⚡ WhatsApp direct chat",
-            "📦 Bulk MOQ pricing",
-          ].map((t) => (
-            <span key={t} className="text-xs sm:text-sm font-medium text-gray-600 whitespace-nowrap">
-              {t}
-            </span>
-          ))}
-        </div>
-      </section>
-
       {/* ── Categories ── */}
       <section className="section">
         <div className="flex items-end justify-between mb-8">

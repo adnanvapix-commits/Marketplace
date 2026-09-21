@@ -105,24 +105,25 @@ export default function SellPage() {
               Product Image <span className="text-gray-400 font-normal">(optional)</span>
             </label>
             {imagePreview ? (
-              <div className="relative inline-block">
-                <Image src={imagePreview} alt="Preview" width={200} height={150}
-                  className="rounded-xl object-cover border border-cream-200 w-full max-w-[200px] h-[150px]" />
+              <div className="relative w-48 h-48 shrink-0">
+                <Image src={imagePreview} alt="Preview" fill
+                  className="rounded-xl object-cover border border-cream-200" />
                 <button type="button" onClick={clearImage}
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors">
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow-sm hover:bg-red-600 transition-colors z-10">
                   <X size={12} />
                 </button>
                 {uploadingImage && (
-                  <div className="absolute inset-0 bg-white/70 rounded-xl flex items-center justify-center">
+                  <div className="absolute inset-0 bg-white/70 rounded-xl flex items-center justify-center z-10">
                     <Loader2 size={20} className="animate-spin text-primary" />
                   </div>
                 )}
               </div>
             ) : (
-              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-cream-300 rounded-xl cursor-pointer hover:border-primary/40 hover:bg-cream-50 transition-colors">
+              <label className="flex flex-col items-center justify-center w-48 h-48 border-2 border-dashed border-cream-300 rounded-xl cursor-pointer hover:border-primary/40 hover:bg-cream-50 transition-colors">
                 <ImagePlus size={28} className="text-gray-300 mb-2" />
-                <span className="text-sm text-gray-400">Click to upload image</span>
-                <span className="text-xs text-gray-300 mt-0.5">PNG, JPG, WEBP up to 10MB</span>
+                <span className="text-sm text-gray-400">Click to upload</span>
+                <span className="text-xs text-gray-300 mt-0.5">1:1 square image</span>
+                <span className="text-xs text-gray-300">PNG, JPG up to 10MB</span>
                 <input type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
               </label>
             )}
