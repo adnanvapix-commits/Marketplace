@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Account not verified" }, { status: 403 });
 
   const body = await req.json();
-  const { title, description, price, category, location, brand, quantity, minimum_order_quantity, condition } = body;
+  const { title, description, price, category, location, brand, quantity, minimum_order_quantity, condition, image_url } = body;
 
   // Input validation
   if (!title?.trim() || !description?.trim() || !category || !condition)
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     quantity:  parsedQty,
     minimum_order_quantity: parsedMoq,
     condition,
-    image_url: "",
+    image_url: typeof image_url === "string" && image_url.startsWith("https://res.cloudinary.com/") ? image_url : "",
     is_active: true,
     expires_at: new Date(Date.now() + 90 * 86400000).toISOString(), // 90 days from now
   });
