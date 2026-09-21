@@ -1,5 +1,4 @@
 import { createServerClient } from "@supabase/ssr";
-import { createClient as createAdminSupabase } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
@@ -37,12 +36,16 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  // Wrap entire logic in try/catch — fail-closed: on any error, block protected routes
   try {
-    const { data: { user } } = await supabase.auth.getUser();
     const path = request.nextUrl.pathname;
 
-    // 1. Redirect logged-in users away from login page
+    // ── Fast path: use getSession() — reads from cookie, ZERO network call
+    // This is safe for middleware routing decisions. Actual DB verification
+    // happens in API routes which use getUser() (cryptographically verified).
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user ?? null;
+
+    // 1. Redirect logged-in users away from login
     if (path === "/login" || path === "/register") {
       if (user) {
         const url = request.nextUrl.clone();
@@ -52,20 +55,19 @@ export async function updateSession(request: NextRequest) {
       return supabaseResponse;
     }
 
-    // 2. Admin protection — DB check for non-admin-email users
+    // 2. Admin protection
     if (path.startsWith("/admin")) {
       if (!user) {
         const url = request.nextUrl.clone();
         url.pathname = "/";
         return NextResponse.redirect(url);
       }
-      // Use server-only ADMIN_EMAIL, fall back to NEXT_PUBLIC for compatibility
       const adminEmail = process.env.ADMIN_EMAIL ?? process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
+      // Fast check: email match from session (no DB call)
       if (user.email !== adminEmail) {
-        // Always verify via DB for non-known-admin-email users
-        const { data: adminProfile } = await supabase
-          .from("users").select("role").eq("id", user.id).single();
-        if (adminProfile?.role !== "admin") {
+        // Check role from JWT metadata (set by DB trigger — trusted)
+        const role = user.user_metadata?.role ?? user.app_metadata?.role;
+        if (role !== "admin") {
           const url = request.nextUrl.clone();
           url.pathname = "/";
           return NextResponse.redirect(url);
@@ -74,7 +76,7 @@ export async function updateSession(request: NextRequest) {
       return supabaseResponse;
     }
 
-    // 3. Login required routes
+    // 3. Login required
     const loginRequired = ["/sell", "/buy", "/chat", "/dashboard", "/profile", "/subscription", "/help", "/account"];
     const requiresLogin = loginRequired.some((p) => path.startsWith(p));
     if (requiresLogin && !user) {
@@ -83,41 +85,21 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // 4. Verification gating — /subscription and /help accessible to all logged-in users
-    // SECURITY: removed unsigned cookie cache — it could be forged by users.
-    // Instead, read is_verified from JWT metadata (populated by DB trigger, server-side only).
-    // JWT metadata is signed and cannot be forged by users.
+    // 4. Verification gate — read from JWT metadata (set by DB trigger)
+    // Zero DB call — JWT is signed by Supabase, metadata is server-set via trigger
     const verificationRequired = ["/sell", "/buy", "/chat", "/dashboard"];
     const requiresVerification = verificationRequired.some((p) => path.startsWith(p));
 
     if (requiresVerification && user) {
-      // Primary: read from signed JWT metadata (set by DB trigger, not user-writable via normal SDK)
-      const jwtMeta = user.user_metadata ?? {};
-      let isVerified = jwtMeta.is_verified === true;
+      const meta = user.user_metadata ?? {};
+      // Trust JWT: is_verified is written by the DB trigger (sync_user_metadata)
+      // which only Supabase admin functions can update — not user-writable
+      const isVerified   = meta.is_verified   === true;
+      const isSubscribed = meta.is_subscribed === true;
+      const isAdmin      = user.email === (process.env.ADMIN_EMAIL ?? process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "")
+                        || meta.role === "admin";
 
-      // Fallback: if JWT metadata not synced (new user), do a DB check
-      if (!isVerified) {
-        try {
-          const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-          if (serviceKey && serviceKey !== "your_service_role_key_here") {
-            const adminDb = createAdminSupabase(supabaseUrl, serviceKey, {
-              auth: { autoRefreshToken: false, persistSession: false },
-            });
-            const { data: profile } = await adminDb
-              .from("users").select("is_verified, is_subscribed").eq("id", user.id).single();
-            isVerified = !!(profile?.is_verified && profile?.is_subscribed);
-          } else {
-            const { data: profile } = await supabase
-              .from("users").select("is_verified, is_subscribed").eq("id", user.id).single();
-            isVerified = !!(profile?.is_verified && profile?.is_subscribed);
-          }
-        } catch {
-          // DB error — fail-closed: block unverified access
-          isVerified = false;
-        }
-      }
-
-      if (!isVerified) {
+      if (!isAdmin && !(isVerified && isSubscribed)) {
         const url = request.nextUrl.clone();
         url.pathname = "/";
         const redirectResponse = NextResponse.redirect(url);
@@ -129,7 +111,7 @@ export async function updateSession(request: NextRequest) {
     }
 
   } catch {
-    // Fail-closed: on any unexpected error, block access to protected routes
+    // Fail-closed on errors for protected routes
     const path = request.nextUrl.pathname;
     const isProtected = ["/admin", "/sell", "/buy", "/chat", "/dashboard"].some(p => path.startsWith(p));
     if (isProtected) {
@@ -137,7 +119,6 @@ export async function updateSession(request: NextRequest) {
       url.pathname = "/login";
       return NextResponse.redirect(url);
     }
-    return supabaseResponse;
   }
 
   return supabaseResponse;

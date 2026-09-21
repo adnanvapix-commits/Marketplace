@@ -3,8 +3,8 @@ import { Users, ShoppingBag, MessageCircle, CreditCard, TrendingUp, ArrowRight, 
 import Link from "next/link";
 import { formatDate } from "@/lib/utils/formatDate";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// Revalidate every 30 seconds — cached at CDN, much faster than force-dynamic
+export const revalidate = 30;
 
 export default async function AdminDashboard() {
   const db = createAdminClient();
@@ -13,30 +13,37 @@ export default async function AdminDashboard() {
   const sevenDaysFromNow = new Date(Date.now() + 7 * 86400000).toISOString();
 
   const [
-    usersRes, productsRes, subsRes, conversationsRes,
+    usersRes, productsRes, conversationsRes,
     newUsersRes, pendingRes, expiringRes, topProductsRes, openTicketsRes,
+    activeSubsRes, expiredSubsRes, tiersRes,
   ] = await Promise.all([
     db.from("users").select("id", { count: "exact", head: true }),
     db.from("products").select("id", { count: "exact", head: true }).eq("is_active", true),
-    db.from("users").select("is_subscribed, subscription_expiry, subscription_tier"),
     db.rpc("count_conversations"),
-    // New users in last 30 days
     db.from("users").select("id", { count: "exact", head: true }).gte("created_at", thirtyDaysAgo),
-    // Pending verification
     db.from("users").select("id, email, full_name, company_name, created_at").eq("verification_status", "pending").eq("is_verified", false).order("created_at", { ascending: false }).limit(5),
-    // Subscriptions expiring in next 7 days
     db.from("users").select("id, email, company_name, subscription_expiry, subscription_tier").eq("is_subscribed", true).lte("subscription_expiry", sevenDaysFromNow).gt("subscription_expiry", now.toISOString()).order("subscription_expiry", { ascending: true }).limit(5),
-    // Top 5 most viewed products
     db.from("products").select("id, title, view_count, category").eq("is_active", true).order("view_count", { ascending: false }).limit(5),
-    // Open support tickets
     db.from("support_tickets").select("id", { count: "exact", head: true }).eq("status", "open"),
+    // Fast count queries instead of fetching all rows
+    db.from("users").select("id", { count: "exact", head: true }).eq("is_subscribed", true).or(`subscription_expiry.is.null,subscription_expiry.gt.${now.toISOString()}`),
+    db.from("users").select("id", { count: "exact", head: true }).eq("is_subscribed", true).lt("subscription_expiry", now.toISOString()),
+    db.from("users").select("subscription_tier", { count: "exact" }).eq("is_subscribed", true).not("subscription_tier", "is", null),
   ]);
 
-  const allSubs = subsRes.data ?? [];
-  const activeSubs   = allSubs.filter(u => u.is_subscribed && (!u.subscription_expiry || new Date(u.subscription_expiry) > now)).length;
-  const expiredSubs  = allSubs.filter(u => u.is_subscribed && u.subscription_expiry && new Date(u.subscription_expiry) <= now).length;
+  const activeSubs  = activeSubsRes.count ?? 0;
+  const expiredSubs = expiredSubsRes.count ?? 0;
+  // Build tier counts from the grouped data
   const tiers = { elite: 0, expert: 0, beginner: 0 } as Record<string, number>;
-  allSubs.filter(u => u.is_subscribed && u.subscription_tier).forEach(u => { if (tiers[u.subscription_tier]) tiers[u.subscription_tier]++; else tiers[u.subscription_tier] = 1; });
+  // We need tier breakdown - use a targeted query
+  const [eliteCount, expertCount, beginnerCount] = await Promise.all([
+    db.from("users").select("id", { count: "exact", head: true }).eq("is_subscribed", true).eq("subscription_tier", "elite"),
+    db.from("users").select("id", { count: "exact", head: true }).eq("is_subscribed", true).eq("subscription_tier", "expert"),
+    db.from("users").select("id", { count: "exact", head: true }).eq("is_subscribed", true).eq("subscription_tier", "beginner"),
+  ]);
+  tiers.elite    = eliteCount.count    ?? 0;
+  tiers.expert   = expertCount.count   ?? 0;
+  tiers.beginner = beginnerCount.count ?? 0;
 
   const statCards = [
     { label: "Total Users",     value: usersRes.count ?? 0,         icon: Users,         color: "bg-blue-50 text-blue-600",     href: "/admin/users" },
@@ -192,7 +199,6 @@ export default async function AdminDashboard() {
             <div className="pt-2 border-t border-cream-100 flex justify-between text-xs text-gray-500">
               <span>Active: <strong className="text-green-600">{activeSubs}</strong></span>
               <span>Expired: <strong className="text-orange-500">{expiredSubs}</strong></span>
-              <span>None: <strong className="text-gray-400">{(usersRes.count ?? 0) - activeSubs - expiredSubs}</strong></span>
             </div>
           </div>
         </div>

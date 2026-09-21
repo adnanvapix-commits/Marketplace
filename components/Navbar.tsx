@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -9,8 +9,10 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import SubscriptionBadge from "./SubscriptionBadge";
-import NotificationBell from "./NotificationBell";
 import type { SubscriptionTier } from "@/types";
+
+// Lazy-load notification bell — doesn't block initial navbar render
+const NotificationBell = lazy(() => import("./NotificationBell"));
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -135,8 +137,10 @@ export default function Navbar() {
 
               <span className="w-px h-5 bg-cream-300 mx-1" />
 
-              {/* Notification bell */}
-              <NotificationBell userId={user!.id} />
+              {/* Notification bell — lazy loaded, won't block navbar */}
+              <Suspense fallback={<div className="w-8 h-8" />}>
+                <NotificationBell userId={user!.id} />
+              </Suspense>
 
               <form action="/api/auth/logout" method="POST">
                 <button

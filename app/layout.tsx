@@ -40,6 +40,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Preconnect to Supabase for faster first DB query */}
+        <link rel="preconnect" href={`https://${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', '') ?? ''}`} />
+        <link rel="dns-prefetch" href="https://supabase.co" />
+        <link rel="preconnect" href="https://res.cloudinary.com" />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+      </head>
       <body className={inter.className}>
         <AuthProvider>
           <Navbar />

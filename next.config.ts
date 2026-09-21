@@ -9,15 +9,24 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.supabase.co" },
     ],
     formats: ["image/avif", "image/webp"],
-    minimumCacheTTL: 60 * 60 * 24 * 7,
+    minimumCacheTTL: 60 * 60 * 24 * 7, // 7 days
     deviceSizes: [640, 750, 828, 1080, 1200],
     imageSizes: [16, 32, 48, 64, 96, 128, 256],
   },
 
   async headers() {
     return [
-      // Allow search API to set its own cache headers (CDN caching)
-      // Only force no-store on mutation/auth routes
+      // Static assets: cache aggressively
+      {
+        source: "/_next/static/(.*)",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      // Logo / public assets
+      {
+        source: "/logo.jpeg",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+      },
+      // Mutation + auth APIs: never cache
       {
         source: "/api/auth/(.*)",
         headers: [{ key: "Cache-Control", value: "no-store" }],
@@ -42,11 +51,20 @@ const nextConfig: NextConfig = {
         source: "/api/support/(.*)",
         headers: [{ key: "Cache-Control", value: "no-store" }],
       },
+      {
+        source: "/api/notifications/(.*)",
+        headers: [{ key: "Cache-Control", value: "no-store" }],
+      },
     ];
   },
 
   experimental: {
-    optimizePackageImports: ["lucide-react", "@supabase/supabase-js"],
+    optimizePackageImports: [
+      "lucide-react",
+      "@supabase/supabase-js",
+      "@supabase/ssr",
+      "zustand",
+    ],
   },
 };
 

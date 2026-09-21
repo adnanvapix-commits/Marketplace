@@ -20,7 +20,7 @@ export default async function ProfilePage() {
     supabase.from("users").select("*").eq("id", user.id).single(),
     supabase.from("products")
       .select("id, title, price, condition, quantity, minimum_order_quantity, category")
-      .eq("seller_id", user.id)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
   ]);
 
