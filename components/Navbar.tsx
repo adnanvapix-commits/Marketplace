@@ -161,14 +161,21 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile hamburger */}
-        <button
-          className="md:hidden p-2 rounded-xl text-gray-600 hover:bg-cream-200 transition-colors"
-          onClick={() => setOpen(!open)}
-          aria-label="Toggle menu"
-        >
-          {open ? <X size={22} /> : <Menu size={22} />}
-        </button>
+        {/* Mobile: notification bell + hamburger */}
+        <div className="md:hidden flex items-center gap-1">
+          {isLoggedIn && (
+            <Suspense fallback={<div className="w-8 h-8" />}>
+              <NotificationBell userId={user!.id} />
+            </Suspense>
+          )}
+          <button
+            className="p-2 rounded-xl text-gray-600 hover:bg-cream-200 transition-colors"
+            onClick={() => setOpen(!open)}
+            aria-label="Toggle menu"
+          >
+            {open ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
