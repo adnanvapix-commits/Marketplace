@@ -39,68 +39,95 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen" style={{ background: "#FFFDF7" }}>
 
-      {/* ── Hero ── */}
-      <section className="relative overflow-hidden bg-hero-gradient px-4 py-12 sm:py-16 md:py-24">
-        {/* Decorative circles */}
-        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, #F0CC70 0%, transparent 70%)" }} />
-        <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, #B8860B 0%, transparent 70%)" }} />
+      {/* ── Hero — Dubai skyline as full background ── */}
+      <section className="relative overflow-hidden min-h-[520px] sm:min-h-[600px] md:min-h-[680px] flex items-center">
 
-        <div className="relative max-w-4xl mx-auto text-center animate-fade-in">
-          {/* Pill badge */}
-          <div className="inline-flex items-center gap-2 bg-primary/5 text-primary px-4 py-1.5 rounded-full text-xs font-semibold mb-4 sm:mb-6 border border-primary/15">
-            Dubai&apos;s Premier B2B Marketplace
-          </div>
+        {/* Dubai skyline background image */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1600&q=80&auto=format&fit=crop"
+          alt="Dubai skyline"
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="eager"
+        />
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 mb-4 sm:mb-5 leading-tight tracking-tight text-balance px-2">
-            Trade Smarter with<br />
-            <span className="text-brand-gradient">Verified Businesses</span>
-          </h1>
+        {/* Dark gradient overlay — ensures text is always readable */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/65 via-black/50 to-black/70" />
 
-          <p className="text-gray-600 text-sm sm:text-base md:text-lg mb-8 sm:mb-10 max-w-xl mx-auto leading-relaxed px-4">
-            Connect with pre-verified buyers and sellers worldwide.
-            Access exclusive wholesale pricing and build lasting partnerships.
-          </p>
+        {/* Subtle decorative glow */}
+        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-20 pointer-events-none"
+          style={{ background: "radial-gradient(circle, #1B3A6B 0%, transparent 70%)" }} />
 
-          {/* Search bar */}
-          <form
-            action="/buy"
-            method="GET"
-            className="flex flex-col sm:flex-row gap-2 sm:gap-3 max-w-2xl mx-auto mb-6 sm:mb-8 px-2"
-          >
-            <div className="relative flex-1">
-              <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="text"
-                name="q"
-                placeholder="Search products, brands, categories..."
-                className="w-full pl-10 sm:pl-11 pr-4 py-3 sm:py-3.5 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 shadow-soft-md"
-              />
+        {/* All content sits on top of the image */}
+        <div className="relative w-full px-4 py-16 sm:py-24">
+          <div className="max-w-4xl mx-auto text-center animate-fade-in">
+
+            {/* Pill badge */}
+            <div className="inline-flex items-center gap-2 bg-white/10 text-white/90 backdrop-blur-sm px-4 py-1.5 rounded-full text-xs font-semibold mb-4 sm:mb-6 border border-white/20">
+              🇦🇪 Dubai&apos;s Premier B2B Marketplace
             </div>
-            <button
-              type="submit"
-              className="bg-primary hover:bg-primary-dark text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-semibold text-sm transition-all active:scale-95 shadow-cream-md whitespace-nowrap"
-            >
-              Search
-            </button>
-          </form>
 
-          {/* CTA buttons */}
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-2">
-            <Link
-              href="/buy"
-              className="flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-dark transition-all active:scale-95 shadow-soft"
+            {/* Heading */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-5 leading-tight tracking-tight text-balance px-2 drop-shadow-lg">
+              Trade Smarter with<br />
+              <span className="text-transparent bg-clip-text"
+                style={{ backgroundImage: "linear-gradient(135deg, #7BA7FF 0%, #2E8B57 100%)" }}>
+                Verified Businesses
+              </span>
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-white/80 text-sm sm:text-base md:text-lg mb-8 sm:mb-10 max-w-xl mx-auto leading-relaxed px-4 drop-shadow">
+              Connect with pre-verified buyers and sellers worldwide.
+              Access exclusive wholesale pricing and build lasting partnerships.
+            </p>
+
+            {/* Search bar */}
+            <form
+              action="/buy"
+              method="GET"
+              className="flex flex-col sm:flex-row gap-2 sm:gap-3 max-w-2xl mx-auto mb-6 sm:mb-8 px-2"
             >
-              🛒 Start Buying
-            </Link>
-            <Link
-              href="/sell"
-              className="flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3 rounded-xl border-2 border-primary/30 text-primary-dark font-semibold text-sm hover:bg-primary/5 transition-all active:scale-95"
-            >
-              🏷️ Start Selling
-            </Link>
-            <HeroCTA />
+              <div className="relative flex-1">
+                <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  name="q"
+                  placeholder="Search products, brands, categories..."
+                  className="w-full pl-10 sm:pl-11 pr-4 py-3 sm:py-3.5 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 shadow-lg bg-white"
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-primary hover:bg-primary-dark text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-semibold text-sm transition-all active:scale-95 shadow-lg whitespace-nowrap"
+              >
+                Search
+              </button>
+            </form>
+
+            {/* CTA buttons */}
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-2">
+              <Link
+                href="/buy"
+                className="flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-dark transition-all active:scale-95 shadow-lg"
+              >
+                🛒 Start Buying
+              </Link>
+              <Link
+                href="/sell"
+                className="flex items-center gap-2 px-5 sm:px-7 py-2.5 sm:py-3 rounded-xl bg-white/15 backdrop-blur-sm border-2 border-white/30 text-white font-semibold text-sm hover:bg-white/25 transition-all active:scale-95"
+              >
+                🏷️ Start Selling
+              </Link>
+              <HeroCTA />
+            </div>
+
+            {/* Location tag at bottom */}
+            <div className="mt-8 flex items-center justify-center gap-1.5 text-white/50 text-xs">
+              <span>📍</span>
+              <span>Dubai, United Arab Emirates</span>
+            </div>
+
           </div>
         </div>
       </section>

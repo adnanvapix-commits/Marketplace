@@ -24,7 +24,7 @@ export default function HeroCTA({ variant = "link" }: Props) {
         href="/dashboard"
         className={variant === "button"
           ? "btn-primary inline-flex items-center gap-2 px-8 py-3 text-base"
-          : "flex items-center gap-1.5 text-primary text-sm font-medium hover:text-primary-dark transition-colors px-2"
+          : "flex items-center gap-1.5 text-white/70 hover:text-white text-sm font-medium transition-colors px-2"
         }
       >
         Go to Dashboard <ArrowRight size={variant === "button" ? 16 : 14} />
@@ -37,7 +37,7 @@ export default function HeroCTA({ variant = "link" }: Props) {
       href="/login"
       className={variant === "button"
         ? "btn-primary inline-flex items-center gap-2 px-8 py-3 text-base"
-        : "flex items-center gap-1.5 text-primary text-sm font-medium hover:text-primary-dark transition-colors px-2"
+        : "flex items-center gap-1.5 text-white/70 hover:text-white text-sm font-medium transition-colors px-2"
       }
     >
       {variant === "button" ? "Get Started Free" : "Create free account"}
