@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Send, Users, User, Bell, CheckCircle, Search } from "lucide-react";
+import { Send, Users, User, Bell, CheckCircle, Search, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { formatDateTime } from "@/lib/utils/formatDate";
 
@@ -173,6 +173,14 @@ export default function NotificationSender({ users, recentNotifications }: { use
       <div className="card p-5 sm:p-6">
         <h2 className="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2">
           <Bell size={15} className="text-primary" /> Recently Sent
+          {recent.length > 0 && (
+            <button
+              onClick={() => setRecent([])}
+              className="ml-auto flex items-center gap-1 text-xs text-red-500 hover:underline"
+            >
+              <Trash2 size={11} /> Clear list
+            </button>
+          )}
         </h2>
 
         {recent.length === 0 ? (
@@ -185,8 +193,16 @@ export default function NotificationSender({ users, recentNotifications }: { use
             {recent.map(n => {
               const targetUser = n.user_id === "all" ? null : users.find(u => u.id === n.user_id);
               return (
-                <div key={n.id} className="border border-cream-200 rounded-xl p-3">
-                  <div className="flex items-start justify-between gap-2 mb-1">
+                <div key={n.id} className="border border-cream-200 rounded-xl p-3 group relative">
+                  {/* Delete button */}
+                  <button
+                    onClick={() => setRecent(prev => prev.filter(x => x.id !== n.id))}
+                    className="absolute top-2 right-2 text-gray-300 hover:text-red-500 transition-colors opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                    aria-label="Remove"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                  <div className="flex items-start justify-between gap-2 mb-1 pr-5">
                     <p className="text-xs font-semibold text-gray-800 flex-1">{n.title}</p>
                     {n.read
                       ? <CheckCircle size={12} className="text-green-400 shrink-0 mt-0.5" />

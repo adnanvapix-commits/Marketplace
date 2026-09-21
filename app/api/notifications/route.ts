@@ -25,10 +25,27 @@ export async function PATCH(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { ids } = await req.json(); // array of notification IDs, or "all"
+  const { ids } = await req.json();
   if (!ids) return NextResponse.json({ error: "ids required" }, { status: 400 });
 
   let query = supabase.from("notifications").update({ read: true }).eq("user_id", user.id);
+  if (Array.isArray(ids)) query = query.in("id", ids);
+
+  const { error } = await query;
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ success: true });
+}
+
+// DELETE — delete one or all notifications
+export async function DELETE(req: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { ids } = await req.json(); // array of IDs or "all"
+  if (!ids) return NextResponse.json({ error: "ids required" }, { status: 400 });
+
+  let query = supabase.from("notifications").delete().eq("user_id", user.id);
   if (Array.isArray(ids)) query = query.in("id", ids);
 
   const { error } = await query;
