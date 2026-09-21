@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createPooledAdminClient as createAdminClient } from "@/lib/supabase/admin";
 import UsersTable from "./UsersTable";
 import type { AdminUser } from "@/lib/services/adminService";
 

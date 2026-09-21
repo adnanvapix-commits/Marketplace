@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createPooledAdminClient as createAdminClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
 import { Building2, MapPin, ShieldCheck, Package, Eye } from "lucide-react";
 import Link from "next/link";

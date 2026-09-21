@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createPooledAdminClient as createAdminClient } from "@/lib/supabase/admin";
 
 // Called by Vercel Cron or an external scheduler to auto-deactivate expired products
 // Protected by a secret token to prevent unauthorized calls

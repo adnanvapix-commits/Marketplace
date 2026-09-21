@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createPooledAdminClient as createAdminClient } from "@/lib/supabase/admin";
 import { ScrollText } from "lucide-react";
 
 const ACTION_LABELS: Record<string, { label: string; color: string }> = {

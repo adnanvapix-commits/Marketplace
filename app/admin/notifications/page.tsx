@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createPooledAdminClient as createAdminClient } from "@/lib/supabase/admin";
 import NotificationSender from "./NotificationSender";
 
 export const dynamic = "force-dynamic";
