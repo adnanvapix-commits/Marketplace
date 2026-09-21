@@ -28,11 +28,9 @@ export default async function DashboardPage() {
   ]);
 
   const profileData = profileRes.data;
-
-  // Redirect admin based on role from the single profile query
   if (profileData?.role === "admin") redirect("/admin");
 
-  const products = (productsRes.data as Product[]) ?? [];
+  const products = (productsRes.error ? [] : productsRes.data as Product[]) ?? [];
   const subExpiry = profileData?.subscription_expiry ? new Date(profileData.subscription_expiry) : null;
   const subActive = profileData?.is_subscribed && subExpiry && subExpiry > new Date();
 

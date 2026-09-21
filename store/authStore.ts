@@ -7,7 +7,6 @@ interface AuthState {
   isVerified: boolean;
   hydrated: boolean;
   selectedMode: "buy" | "sell";
-  userRole: string | null;
   hasCompletedProfile: boolean;
   lastVisitedPage: string | null;
 
@@ -16,16 +15,12 @@ interface AuthState {
   setIsVerified: (v: boolean) => void;
   setHydrated: (v: boolean) => void;
   setSelectedMode: (mode: "buy" | "sell") => void;
-  setUserRole: (role: string | null) => void;
   setHasCompletedProfile: (v: boolean) => void;
   setLastVisitedPage: (page: string | null) => void;
 }
 
 const getInitialSelectedMode = (): "buy" | "sell" => {
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("selectedMode");
-    if (stored === "buy" || stored === "sell") return stored;
-  }
+  // Only read localStorage on client after mount — avoids SSR hydration mismatch
   return "buy";
 };
 
@@ -35,7 +30,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   isVerified: false,
   hydrated: false,
   selectedMode: getInitialSelectedMode(),
-  userRole: null,
   hasCompletedProfile: false,
   lastVisitedPage: null,
 
@@ -49,7 +43,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
     set({ selectedMode: mode });
   },
-  setUserRole: (role) => set({ userRole: role }),
   setHasCompletedProfile: (v) => set({ hasCompletedProfile: v }),
   setLastVisitedPage: (page) => set({ lastVisitedPage: page }),
 }));

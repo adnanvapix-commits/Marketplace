@@ -17,8 +17,10 @@ export async function PATCH(req: NextRequest) {
   const admin = await verifyAdmin();
   if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
 
-  const { userId, action } = await req.json(); // action: 'approve' | 'reject'
-  if (!userId || !action) return NextResponse.json({ error: "userId and action required" }, { status: 400 });
+  const { userId, action } = await req.json();
+  if (!userId) return NextResponse.json({ error: "userId required" }, { status: 400 });
+  if (action !== "approve" && action !== "reject")
+    return NextResponse.json({ error: "action must be 'approve' or 'reject'" }, { status: 400 });
 
   const db = createAdminClient();
   const updates =

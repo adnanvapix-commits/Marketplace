@@ -11,13 +11,12 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const meta = user.user_metadata ?? {};
-  const isAdmin = meta.role === "admin" || user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
-  const isVerified = meta.is_verified === true;
-  const isSubscribed = meta.is_subscribed === true;
+  const adminEmail = process.env.ADMIN_EMAIL ?? process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
+  const isAdmin = meta.role === "admin" || user.email === adminEmail;
 
-  let hasAccess = isAdmin || (isVerified && isSubscribed);
-
-  // Fallback DB check only for new users whose JWT metadata is not yet synced
+  // Always verify subscription/verification via DB — user_metadata is user-writable
+  // and cannot be trusted for access control decisions
+  let hasAccess = isAdmin;
   if (!hasAccess) {
     const { data: profile } = await supabase
       .from("users").select("is_verified, is_subscribed, role").eq("id", user.id).single();

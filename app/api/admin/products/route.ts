@@ -40,9 +40,11 @@ export async function PATCH(req: NextRequest) {
 
   const { productId, is_blocked } = await req.json();
   if (!productId) return NextResponse.json({ error: "productId required" }, { status: 400 });
+  if (typeof is_blocked !== "boolean")
+    return NextResponse.json({ error: "is_blocked must be a boolean" }, { status: 400 });
 
   const db = createAdminClient();
-  const { error } = await db.from("products").update({ is_blocked }).eq("id", productId);
+  const { error } = await db.from("products").update({ is_blocked: Boolean(is_blocked) }).eq("id", productId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   await db.from("admin_logs").insert({
