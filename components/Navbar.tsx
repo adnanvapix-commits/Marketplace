@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home, ShoppingBag, PlusCircle, MessageCircle,
-  User, LogOut, Menu, X, CreditCard, LifeBuoy, Info, LayoutDashboard, Shield,
+  User, LogOut, Menu, X, CreditCard, LifeBuoy, Info, LayoutDashboard, Shield, Heart,
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import SubscriptionBadge from "./SubscriptionBadge";
+import NotificationBell from "./NotificationBell";
 import type { SubscriptionTier } from "@/types";
 
 export default function Navbar() {
@@ -18,11 +19,31 @@ export default function Navbar() {
   const hydrated = useAuthStore((s) => s.hydrated);
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@gmail.com";
   const isAdmin = role === "admin" || user?.email === ADMIN_EMAIL;
   const isLoggedIn = hydrated && !!user;
   const subTier = (user?.user_metadata?.subscription_tier ?? null) as SubscriptionTier;
+
+  // Fetch unread message count (lightweight: just a count query)
+  const fetchUnread = useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await fetch("/api/chat/unread");
+      if (res.ok) {
+        const { count } = await res.json();
+        setUnreadMessages(count ?? 0);
+      }
+    } catch { /* ignore */ }
+  }, [user]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 60_000); // refresh every 60s
+    return () => clearInterval(interval);
+  }, [isLoggedIn, fetchUnread]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -81,9 +102,16 @@ export default function Navbar() {
                 <PlusCircle size={15} className="shrink-0" /> Sell
               </NavLink>
 
-              <NavLink href="/chat">
-                <MessageCircle size={15} className="shrink-0" /> Chat
-              </NavLink>
+              <div className="relative">
+                <NavLink href="/chat">
+                  <MessageCircle size={15} className="shrink-0" /> Chat
+                </NavLink>
+                {unreadMessages > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5 pointer-events-none">
+                    {unreadMessages > 9 ? "9+" : unreadMessages}
+                  </span>
+                )}
+              </div>
 
               <NavLink href={isAdmin ? "/admin" : "/dashboard"}>
                 {isAdmin ? <Shield size={15} className="shrink-0" /> : <LayoutDashboard size={15} className="shrink-0" />}
@@ -94,6 +122,10 @@ export default function Navbar() {
                 <User size={15} className="shrink-0" /> Profile
               </NavLink>
 
+              <NavLink href="/wishlist">
+                <Heart size={15} className="shrink-0" /> Wishlist
+              </NavLink>
+
               <Link href="/subscription" prefetch className={`flex items-center gap-1.5 text-sm font-medium whitespace-nowrap transition-all duration-150 px-3 py-2 rounded-lg ${
                 isActive("/subscription") ? "text-primary bg-primary-light" : "text-gray-600 hover:text-primary hover:bg-cream-100"
               }`}>
@@ -102,6 +134,9 @@ export default function Navbar() {
               </Link>
 
               <span className="w-px h-5 bg-cream-300 mx-1" />
+
+              {/* Notification bell */}
+              <NotificationBell userId={user!.id} />
 
               <form action="/api/auth/logout" method="POST">
                 <button
@@ -150,8 +185,15 @@ export default function Navbar() {
                 <MobileLink href="/sell" icon={<PlusCircle size={18} />} label="Sell"
                   active={isActive("/sell")} onClick={() => setOpen(false)} />
 
-                <MobileLink href="/chat" icon={<MessageCircle size={18} />} label="Chat"
+                <div className="relative">
+                  <MobileLink href="/chat" icon={<MessageCircle size={18} />} label="Chat"
                     active={isActive("/chat")} onClick={() => setOpen(false)} />
+                  {unreadMessages > 0 && (
+                    <span className="absolute top-3 right-4 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5 pointer-events-none">
+                      {unreadMessages > 9 ? "9+" : unreadMessages}
+                    </span>
+                  )}
+                </div>
 
                 <MobileLink
                   href={isAdmin ? "/admin" : "/dashboard"}
@@ -162,6 +204,8 @@ export default function Navbar() {
                 />
                 <MobileLink href="/profile" icon={<User size={18} />} label="Profile"
                   active={isActive("/profile")} onClick={() => setOpen(false)} />
+                <MobileLink href="/wishlist" icon={<Heart size={18} />} label="Wishlist"
+                  active={isActive("/wishlist")} onClick={() => setOpen(false)} />
 
                 <Link
                   href="/subscription"

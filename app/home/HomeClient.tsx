@@ -32,6 +32,9 @@ function HomeInner() {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   const debouncedQuery    = useDebounce(query, 300);
   const debouncedBrand    = useDebounce(filters.brand, 300);
@@ -105,6 +108,24 @@ function HomeInner() {
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
+  // Autocomplete suggestions
+  useEffect(() => {
+    if (debouncedQuery.length < 2) { setSuggestions([]); return; }
+    fetch(`/api/products/suggest?q=${encodeURIComponent(debouncedQuery)}`)
+      .then(r => r.json())
+      .then(({ suggestions: s }) => setSuggestions(s ?? []))
+      .catch(() => {});
+  }, [debouncedQuery]);
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setShowSuggestions(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   function clearAll() { setQuery(""); setFilters(DEFAULT_FILTERS); setPage(1); }
 
   function handleBuy() {
@@ -130,8 +151,8 @@ function HomeInner() {
       {showBanner && <VerificationBanner />}
 
       <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6">
-        {/* Search bar */}
-        <div className="mb-3">
+        {/* Search bar with autocomplete */}
+        <div className="mb-3 relative" ref={searchRef}>
           <div className="relative">
             {loading
               ? <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 text-primary animate-spin" size={18} />
@@ -140,16 +161,31 @@ function HomeInner() {
             <input
               type="text"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => { setQuery(e.target.value); setShowSuggestions(true); }}
+              onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
               placeholder="Search by product name, brand, keyword..."
               className="input pl-10 min-h-[48px] text-sm md:text-base"
             />
             {query && (
-              <button onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <button onClick={() => { setQuery(""); setSuggestions([]); setShowSuggestions(false); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 <X size={16} />
               </button>
             )}
           </div>
+          {/* Autocomplete dropdown */}
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute top-full left-0 right-0 bg-white rounded-xl shadow-soft-md border border-cream-200 z-20 mt-1 overflow-hidden">
+              {suggestions.map((s) => (
+                <button key={s} onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => { setQuery(s); setShowSuggestions(false); }}
+                  className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-cream-50 flex items-center gap-2 transition-colors">
+                  <Search size={12} className="text-gray-400 shrink-0" />
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Buy / Sell quick actions — shown only to verified users */}

@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
     condition,
     image_url: "",
     is_active: true,
+    expires_at: new Date(Date.now() + 90 * 86400000).toISOString(), // 90 days from now
   });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

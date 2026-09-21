@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
-import { MapPin, Calendar, Tag, User } from "lucide-react";
+import { MapPin, Calendar, Tag, User, Eye } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import ChatButton from "./ChatButton";
+import ViewTracker from "./ViewTracker";
+import Link from "next/link";
 import type { Product } from "@/types";
 
 // Cache product pages for 60s — avoids hitting Supabase on every visit
@@ -17,15 +19,18 @@ export default async function ProductDetailPage({
 
   const { data: product } = await supabase
     .from("products")
-    .select("*, users(email, company_name)")
+    .select("*, users(id, email, company_name)")
     .eq("id", id)
     .single();
 
   if (!product) notFound();
-  const p = product as Product;
+  const p = product as Product & { view_count?: number };
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 md:py-10">
+      {/* Fire-and-forget view tracker (client component) */}
+      <ViewTracker productId={id} />
+
       <div className="card p-5 sm:p-7 flex flex-col gap-5">
 
         {/* Badge + title + price */}
@@ -37,7 +42,7 @@ export default async function ProductDetailPage({
             {p.title}
           </h1>
           <p className="text-2xl font-bold text-primary mt-1">
-            ${p.price.toLocaleString()}
+            AED {p.price.toLocaleString()}
           </p>
         </div>
 
@@ -58,6 +63,11 @@ export default async function ProductDetailPage({
           {p.brand && (
             <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-lg text-xs">
               <Tag size={12} className="text-primary shrink-0" /> {p.brand}
+            </span>
+          )}
+          {(p.view_count ?? 0) > 0 && (
+            <span className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-lg text-xs">
+              <Eye size={12} className="text-primary shrink-0" /> {p.view_count?.toLocaleString()} views
             </span>
           )}
         </div>
@@ -82,18 +92,24 @@ export default async function ProductDetailPage({
           </p>
         </div>
 
-        {/* Seller — no email shown */}
-        <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-4">
+        {/* Seller */}
+        <Link
+          href={`/seller/${(p.users as { id?: string })?.id ?? p.user_id}`}
+          className="flex items-center gap-3 bg-gray-50 hover:bg-cream-100 rounded-xl p-4 transition-colors"
+        >
           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
             <User size={18} />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-xs text-gray-400 uppercase tracking-wide">Seller</p>
             <p className="font-medium text-gray-700 text-sm truncate">
-              {p.users?.company_name || p.users?.email?.split("@")[0] || "Verified Seller"}
+              {(p.users as { company_name?: string })?.company_name ||
+               (p.users as { email?: string })?.email?.split("@")[0] ||
+               "Verified Seller"}
             </p>
           </div>
-        </div>
+          <span className="text-xs text-primary font-medium shrink-0">View Profile →</span>
+        </Link>
 
         {/* CTA */}
         <ChatButton sellerId={p.user_id} productId={p.id} />

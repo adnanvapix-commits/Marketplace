@@ -31,6 +31,16 @@ export async function PATCH(req: NextRequest) {
   const { error } = await db.from("users").update(updates).eq("id", userId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  // Send in-app notification to user
+  await db.from("notifications").insert({
+    user_id: userId,
+    type: action === "approve" ? "verification_approved" : "verification_rejected",
+    title: action === "approve" ? "✅ Account Verified!" : "❌ Verification Rejected",
+    message: action === "approve"
+      ? "Congratulations! Your account has been verified. You can now subscribe and access the marketplace."
+      : "Your account verification was rejected. Please contact support for more information.",
+  }); // non-blocking, fire-and-forget
+
   await db.from("admin_logs").insert({
     admin_id: admin.id,
     action: action === "approve" ? "verify_user" : "reject_user",

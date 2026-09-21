@@ -77,5 +77,19 @@ export async function PATCH(req: NextRequest) {
     .eq("id", ticketId);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Notify user when admin replies
+  if (admin_reply) {
+    const { data: ticket } = await db.from("support_tickets").select("user_id, subject").eq("id", ticketId).single();
+    if (ticket?.user_id) {
+      await db.from("notifications").insert({
+        user_id: ticket.user_id,
+        type: "ticket_reply",
+        title: "💬 Admin replied to your ticket",
+        message: `Your ticket "${ticket.subject}" received a reply.`,
+      }); // non-blocking
+    }
+  }
+
   return NextResponse.json({ success: true });
 }

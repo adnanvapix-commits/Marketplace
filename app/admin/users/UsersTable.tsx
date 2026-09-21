@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   Search, CheckCircle, XCircle, ShieldOff, Shield,
   CalendarPlus, Loader2, UserCheck, UserX, Mail, MessageCircle,
+  CheckSquare, Square, Users,
 } from "lucide-react";
 import type { AdminUser } from "@/lib/services/adminService";
 import toast from "react-hot-toast";
@@ -22,6 +23,8 @@ export default function UsersTable({ initialUsers, adminId }: Props) {
   const [loading, setLoading] = useState<string | null>(null);
   const [extendUserId, setExtendUserId] = useState<string | null>(null);
   const [extendDays, setExtendDays] = useState("30");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const filtered = users.filter((u) => {
     const matchSearch =
@@ -123,6 +126,49 @@ export default function UsersTable({ initialUsers, adminId }: Props) {
     toast.success(user.is_blocked ? "User activated" : "User suspended");
   }
 
+  function toggleSelect(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map(u => u.id)));
+    }
+  }
+
+  async function handleBulkAction(action: string, label: string) {
+    if (selectedIds.size === 0) { toast.error("Select at least one user"); return; }
+    if (!confirm(`Apply "${label}" to ${selectedIds.size} user(s)?`)) return;
+    setBulkLoading(true);
+    try {
+      const res = await fetch("/api/admin/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userIds: [...selectedIds], action }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      const { affected } = await res.json();
+      toast.success(`${label} applied to ${affected} user(s)`);
+      // Optimistic update for UI
+      const updates: Partial<AdminUser> = {};
+      if (action === "bulk_verify")         { updates.is_verified = true; updates.verification_status = "approved"; }
+      if (action === "bulk_unverify")       { updates.is_verified = false; updates.verification_status = "pending"; }
+      if (action === "bulk_activate_sub")   { updates.is_subscribed = true; }
+      if (action === "bulk_deactivate_sub") { updates.is_subscribed = false; }
+      if (action === "bulk_suspend")        { updates.is_blocked = true; }
+      if (action === "bulk_unsuspend")      { updates.is_blocked = false; }
+      setUsers(prev => prev.map(u => selectedIds.has(u.id) ? { ...u, ...updates } : u));
+      setSelectedIds(new Set());
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Bulk action failed"); }
+    finally { setBulkLoading(false); }
+  }
+
   return (
     <div className="space-y-4">
       {/* Search + filter */}
@@ -151,19 +197,50 @@ export default function UsersTable({ initialUsers, adminId }: Props) {
       </div>
 
       <div className="card overflow-x-auto">
+        {/* Bulk action bar */}
+        {selectedIds.size > 0 && (
+          <div className="flex flex-wrap items-center gap-2 px-4 py-3 bg-primary/5 border-b border-primary/10">
+            <span className="text-xs font-semibold text-primary flex items-center gap-1.5">
+              <Users size={14} /> {selectedIds.size} selected
+            </span>
+            <div className="flex flex-wrap gap-1.5 ml-2">
+              {[
+                { action: "bulk_verify",         label: "Verify All",           cls: "bg-green-50 text-green-700 hover:bg-green-100" },
+                { action: "bulk_activate_sub",   label: "Activate Sub",         cls: "bg-blue-50 text-blue-700 hover:bg-blue-100" },
+                { action: "bulk_deactivate_sub", label: "Deactivate Sub",       cls: "bg-orange-50 text-orange-700 hover:bg-orange-100" },
+                { action: "bulk_unverify",       label: "Unverify All",         cls: "bg-yellow-50 text-yellow-700 hover:bg-yellow-100" },
+                { action: "bulk_suspend",        label: "Suspend All",          cls: "bg-red-50 text-red-700 hover:bg-red-100" },
+                { action: "bulk_unsuspend",      label: "Unsuspend All",        cls: "bg-gray-50 text-gray-700 hover:bg-gray-100" },
+              ].map(({ action, label, cls }) => (
+                <button key={action} onClick={() => handleBulkAction(action, label)}
+                  disabled={bulkLoading}
+                  className={`text-xs px-2.5 py-1.5 rounded-lg font-semibold border transition-colors disabled:opacity-50 ${cls}`}>
+                  {bulkLoading ? "…" : label}
+                </button>
+              ))}
+              <button onClick={() => setSelectedIds(new Set())}
+                className="text-xs px-2.5 py-1.5 rounded-lg font-semibold bg-gray-100 text-gray-500 hover:bg-gray-200">
+                Clear
+              </button>
+            </div>
+          </div>
+        )}
         <table className="w-full text-sm min-w-[1100px]">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50">
+              <th className="px-4 py-3 w-10">
+                <button onClick={toggleSelectAll} className="text-gray-400 hover:text-primary transition-colors">
+                  {selectedIds.size === filtered.length && filtered.length > 0
+                    ? <CheckSquare size={16} className="text-primary" />
+                    : <Square size={16} />
+                  }
+                </button>
+              </th>
               {[
                 "Email", "Full Name", "Company", "WhatsApp", "Member Since",
                 "Role", "Verified", "Subscription", "Expiry", "Status", "Actions",
               ].map((h) => (
-                <th
-                  key={h}
-                  className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide"
-                >
-                  {h}
-                </th>
+                <th key={h} className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">{h}</th>
               ))}
             </tr>
           </thead>
@@ -178,8 +255,14 @@ export default function UsersTable({ initialUsers, adminId }: Props) {
               filtered.map((user) => (
                 <tr
                   key={user.id}
-                  className={`hover:bg-gray-50 transition-colors ${user.is_blocked ? "opacity-50" : ""}`}
+                  className={`hover:bg-gray-50 transition-colors ${user.is_blocked ? "opacity-50" : ""} ${selectedIds.has(user.id) ? "bg-primary/5" : ""}`}
                 >
+                  {/* Checkbox */}
+                  <td className="px-4 py-3">
+                    <button onClick={() => toggleSelect(user.id)} className="text-gray-400 hover:text-primary transition-colors">
+                      {selectedIds.has(user.id) ? <CheckSquare size={15} className="text-primary" /> : <Square size={15} />}
+                    </button>
+                  </td>
                   {/* Email */}
                   <td className="px-4 py-3 font-medium text-gray-800 max-w-[180px] truncate">
                     {user.email}

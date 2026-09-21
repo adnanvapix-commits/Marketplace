@@ -366,3 +366,86 @@ BEGIN
   );
 END;
 $$;
+
+-- ============================================================
+-- Feature: Product view counter
+-- ============================================================
+ALTER TABLE public.products
+  ADD COLUMN IF NOT EXISTS view_count integer NOT NULL DEFAULT 0;
+
+CREATE INDEX IF NOT EXISTS idx_products_view_count ON public.products (view_count DESC);
+
+-- ============================================================
+-- Feature: Product auto-expiry after 90 days
+-- ============================================================
+ALTER TABLE public.products
+  ADD COLUMN IF NOT EXISTS expires_at timestamptz DEFAULT NULL;
+
+-- Set expires_at for existing active products (90 days from created_at)
+UPDATE public.products
+  SET expires_at = created_at + interval '90 days'
+  WHERE expires_at IS NULL AND is_active = true;
+
+-- Function: auto-deactivate expired products
+CREATE OR REPLACE FUNCTION public.deactivate_expired_products()
+RETURNS void
+LANGUAGE sql
+SECURITY DEFINER
+AS $$
+  UPDATE public.products
+  SET is_active = false
+  WHERE is_active = true
+    AND expires_at IS NOT NULL
+    AND expires_at < now();
+$$;
+
+-- ============================================================
+-- Feature: Email notification log (track sent notifications)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.notifications (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id uuid REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  type text NOT NULL CHECK (type IN ('verification_approved', 'verification_rejected', 'subscription_expiry', 'new_message', 'ticket_reply')),
+  title text NOT NULL,
+  message text NOT NULL,
+  read boolean NOT NULL DEFAULT false,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON public.notifications (user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_read ON public.notifications (user_id, read);
+CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON public.notifications (created_at DESC);
+
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own notifications" ON public.notifications;
+CREATE POLICY "Users can view own notifications" ON public.notifications
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own notifications" ON public.notifications;
+CREATE POLICY "Users can update own notifications" ON public.notifications
+  FOR UPDATE USING (auth.uid() = user_id);
+
+-- Enable realtime for instant notification delivery
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND tablename = 'notifications'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
+  END IF;
+END $$;
+
+-- ============================================================
+-- RPC: increment view count atomically
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.increment_view_count(product_id uuid)
+RETURNS void
+LANGUAGE sql
+SECURITY DEFINER
+AS $$
+  UPDATE public.products
+  SET view_count = COALESCE(view_count, 0) + 1
+  WHERE id = product_id;
+$$;
