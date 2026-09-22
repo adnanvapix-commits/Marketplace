@@ -30,7 +30,7 @@ export default function PendingPage() {
     if (data?.role === "admin") { router.push("/admin"); return; }
 
     if (data?.is_verified && data?.is_subscribed) {
-      router.push("/dashboard");
+      router.push("/profile");
       return;
     }
 

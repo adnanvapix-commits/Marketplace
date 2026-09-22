@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home, ShoppingBag, PlusCircle, MessageCircle,
-  User, LogOut, Menu, X, CreditCard, LifeBuoy, Info, LayoutDashboard, Shield, Heart,
+  User, LogOut, Menu, X, CreditCard, LifeBuoy, Info, Shield, Heart,
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import SubscriptionBadge from "./SubscriptionBadge";
@@ -117,10 +117,11 @@ export default function Navbar() {
                 <User size={15} className="shrink-0" /> Profile
               </NavLink>
 
-              <NavLink href={isAdmin ? "/admin" : "/dashboard"}>
-                {isAdmin ? <Shield size={15} className="shrink-0" /> : <LayoutDashboard size={15} className="shrink-0" />}
-                {isAdmin ? "Admin" : "Dashboard"}
-              </NavLink>
+              {isAdmin && (
+                <NavLink href="/admin">
+                  <Shield size={15} className="shrink-0" /> Admin
+                </NavLink>
+              )}
 
               <Link href="/subscription" prefetch className={`flex items-center gap-1.5 text-sm font-medium whitespace-nowrap transition-all duration-150 px-3 py-2 rounded-lg ${
                 isActive("/subscription") ? "text-primary bg-primary-light" : "text-gray-600 hover:text-primary hover:bg-cream-100"
@@ -218,13 +219,10 @@ export default function Navbar() {
                 <MobileLink href="/profile" icon={<User size={18} />} label="Profile"
                   active={isActive("/profile")} onClick={() => setOpen(false)} />
 
-                <MobileLink
-                  href={isAdmin ? "/admin" : "/dashboard"}
-                  icon={isAdmin ? <Shield size={18} /> : <LayoutDashboard size={18} />}
-                  label={isAdmin ? "Admin Dashboard" : "Dashboard"}
-                  active={isActive(isAdmin ? "/admin" : "/dashboard")}
-                  onClick={() => setOpen(false)}
-                />
+                {isAdmin && (
+                  <MobileLink href="/admin" icon={<Shield size={18} />} label="Admin Dashboard"
+                    active={isActive("/admin")} onClick={() => setOpen(false)} />
+                )}
 
                 <Link
                   href="/subscription"

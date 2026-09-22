@@ -87,7 +87,7 @@ export async function updateSession(request: NextRequest) {
 
     // 4. Verification gate — read from JWT metadata (set by DB trigger)
     // Zero DB call — JWT is signed by Supabase, metadata is server-set via trigger
-    const verificationRequired = ["/sell", "/buy", "/chat", "/dashboard"];
+    const verificationRequired = ["/sell", "/buy", "/chat", "/dashboard", "/profile"];
     const requiresVerification = verificationRequired.some((p) => path.startsWith(p));
 
     if (requiresVerification && user) {
@@ -113,7 +113,7 @@ export async function updateSession(request: NextRequest) {
   } catch {
     // Fail-closed on errors for protected routes
     const path = request.nextUrl.pathname;
-    const isProtected = ["/admin", "/sell", "/buy", "/chat", "/dashboard"].some(p => path.startsWith(p));
+    const isProtected = ["/admin", "/sell", "/buy", "/chat", "/dashboard", "/profile"].some(p => path.startsWith(p));
     if (isProtected) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";

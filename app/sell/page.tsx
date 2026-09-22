@@ -83,7 +83,7 @@ export default function SellPage() {
 
       setDone(true);
       toast.success("Product listed!");
-      router.push("/dashboard");
+      router.push("/profile");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to list product");
     } finally {

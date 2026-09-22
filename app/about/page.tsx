@@ -135,7 +135,7 @@ export default async function AboutPage() {
         <p className="text-gray-500 text-sm mb-6">Join verified businesses already on BULKORA.</p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           {isLoggedIn ? (
-            <Link href="/dashboard" className="btn-primary text-sm px-6 py-3">Go to Dashboard</Link>
+            <Link href="/profile" className="btn-primary text-sm px-6 py-3">Go to Profile</Link>
           ) : (
             <Link href="/login" className="btn-primary text-sm px-6 py-3">Create Free Account</Link>
           )}
