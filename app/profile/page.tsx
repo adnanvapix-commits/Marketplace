@@ -3,13 +3,12 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  PlusCircle, User, Pencil, ShoppingBag, MessageCircle,
-  CreditCard, CheckCircle, Clock, XCircle,
+  User, Pencil, ShoppingBag, MessageCircle,
+  CreditCard, CheckCircle, Clock, XCircle, PlusCircle,
 } from "lucide-react";
-import DeleteProductButton from "./DeleteProductButton";
 import VerificationBadge from "@/components/VerificationBadge";
 import SubscriptionBadge from "@/components/SubscriptionBadge";
-import ProductCard from "@/components/ProductCard";
+import ManageListings from "./ManageListings";
 import type { Product } from "@/types";
 
 // Cache 30s — reduces DB calls per page visit
@@ -28,7 +27,9 @@ export default async function ProfilePage() {
   // Fetch profile + all products in parallel
   const [{ data: profile }, { data: productsRaw }] = await Promise.all([
     supabase.from("users").select("*").eq("id", user.id).single(),
-    supabase.from("products").select("*").eq("user_id", user.id)
+    supabase.from("products")
+      .select("id, title, price, condition, quantity, minimum_order_quantity, category, image_url, location, brand, user_id, created_at")
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
   ]);
 
@@ -104,7 +105,6 @@ export default async function ProfilePage() {
       {/* ── Status cards ── */}
       <div className="grid grid-cols-2 gap-3">
 
-        {/* Verification */}
         <div className="card p-3 sm:p-4">
           <p className="text-xs text-gray-400 uppercase tracking-wide mb-1.5">Verification</p>
           {profile?.is_verified ? (
@@ -122,7 +122,6 @@ export default async function ProfilePage() {
           )}
         </div>
 
-        {/* Subscription */}
         <div className="card p-3 sm:p-4">
           <p className="text-xs text-gray-400 uppercase tracking-wide mb-1.5">Subscription</p>
           {subActive ? (
@@ -142,13 +141,11 @@ export default async function ProfilePage() {
           )}
         </div>
 
-        {/* Listings count */}
         <div className="card p-3 sm:p-4">
           <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Listings</p>
           <p className="text-2xl font-bold text-gray-800">{products.length}</p>
         </div>
 
-        {/* Chats shortcut */}
         <div className="card p-3 sm:p-4">
           <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Chats</p>
           <Link href="/chat" className="text-2xl font-bold text-gray-800 hover:text-primary transition-colors">→</Link>
@@ -171,72 +168,9 @@ export default async function ProfilePage() {
         </Link>
       </div>
 
-      {/* ── My Listings ── */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-gray-800">
-            My Listings <span className="text-gray-400 font-normal text-sm">({products.length})</span>
-          </h2>
-          <Link href="/sell" className="btn-primary text-sm flex items-center gap-1.5 py-2">
-            <PlusCircle size={14} /> New Listing
-          </Link>
-        </div>
+      {/* ── Manage Listings (with search) ── */}
+      <ManageListings products={products} />
 
-        {products.length === 0 ? (
-          <div className="card p-10 text-center text-gray-400">
-            <ShoppingBag size={32} className="mx-auto mb-3 opacity-20" />
-            <p className="text-sm mb-4">No listings yet</p>
-            <Link href="/sell" className="btn-primary text-sm">Post Your First Listing</Link>
-          </div>
-        ) : (
-          <>
-            {/* Full ProductCard view (same as dashboard had) */}
-            <div className="flex flex-col gap-2 mb-4">
-              {products.slice(0, 6).map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-
-            {/* Grid with edit/delete actions for all listings */}
-            {products.length > 0 && (
-              <div>
-                <h3 className="font-semibold text-gray-700 text-sm mb-3 mt-6">
-                  Manage Listings
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {products.map((p) => (
-                    <div key={p.id} className="card p-4">
-                      <div className="min-w-0">
-                        <h3 className="font-semibold text-gray-800 truncate text-sm">{p.title}</h3>
-                        <p className="text-primary font-bold mt-0.5">
-                          AED {p.price.toLocaleString()}
-                        </p>
-                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${
-                            p.condition === "new"         ? "bg-green-100 text-green-700" :
-                            p.condition === "used"        ? "bg-yellow-100 text-yellow-700" :
-                                                            "bg-blue-100 text-blue-700"}`}>
-                            {p.condition}
-                          </span>
-                          <span className="text-xs text-gray-400">{p.category}</span>
-                          <span className="text-xs text-gray-400">Qty: {p.quantity}</span>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 mt-3">
-                        <Link href={`/product/${p.id}/edit`}
-                          className="flex-1 text-center text-sm py-2 rounded-lg border border-primary text-primary hover:bg-primary hover:text-white transition-colors font-medium">
-                          Edit
-                        </Link>
-                        <DeleteProductButton productId={p.id} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
     </div>
   );
 }
