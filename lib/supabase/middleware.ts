@@ -39,13 +39,12 @@ export async function updateSession(request: NextRequest) {
   try {
     const path = request.nextUrl.pathname;
 
-    // ── Fast path: use getSession() — reads from cookie, ZERO network call
-    // This is safe for middleware routing decisions. Actual DB verification
-    // happens in API routes which use getUser() (cryptographically verified).
+    // Use getSession() — reads from cookie, ZERO network call for routing decisions.
+    // DB verification happens in API routes using getUser() (cryptographically verified).
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user ?? null;
 
-    // 1. Redirect logged-in users away from login
+    // 1. Redirect logged-in users away from login/register
     if (path === "/login" || path === "/register") {
       if (user) {
         const url = request.nextUrl.clone();
@@ -63,9 +62,7 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url);
       }
       const adminEmail = process.env.ADMIN_EMAIL ?? process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
-      // Fast check: email match from session (no DB call)
       if (user.email !== adminEmail) {
-        // Check role from JWT metadata (set by DB trigger — trusted)
         const role = user.user_metadata?.role ?? user.app_metadata?.role;
         if (role !== "admin") {
           const url = request.nextUrl.clone();
@@ -85,28 +82,58 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // 4. Verification gate — read from JWT metadata (set by DB trigger)
-    // Zero DB call — JWT is signed by Supabase, metadata is server-set via trigger
-    const verificationRequired = ["/sell", "/buy", "/chat", "/dashboard", "/profile"];
-    const requiresVerification = verificationRequired.some((p) => path.startsWith(p));
+    // 4. Subscription gate — only for buy/sell/chat (marketplace actions)
+    //    Verification is independent — profile/account/subscription are always accessible
+    //    so users can see their status and subscribe after being verified.
+    //
+    //    IMPORTANT: JWT metadata (user_metadata) can be STALE — it's only refreshed
+    //    when the user's session token is renewed. When an admin approves a user,
+    //    the DB is updated but the user's existing JWT is unchanged until they
+    //    get a new token. So we ALWAYS do a fresh DB check here instead of
+    //    trusting user_metadata, to avoid blocking newly approved users.
+    const subscriptionRequired = ["/sell", "/buy", "/chat"];
+    const requiresSubscription = subscriptionRequired.some((p) => path.startsWith(p));
 
-    if (requiresVerification && user) {
-      const meta = user.user_metadata ?? {};
-      // Trust JWT: is_verified is written by the DB trigger (sync_user_metadata)
-      // which only Supabase admin functions can update — not user-writable
-      const isVerified   = meta.is_verified   === true;
-      const isSubscribed = meta.is_subscribed === true;
-      const isAdmin      = user.email === (process.env.ADMIN_EMAIL ?? process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "")
-                        || meta.role === "admin";
+    if (requiresSubscription && user) {
+      const adminEmail = process.env.ADMIN_EMAIL ?? process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
+      const isAdmin = user.email === adminEmail || user.user_metadata?.role === "admin";
 
-      if (!isAdmin && !(isVerified && isSubscribed)) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/";
-        const redirectResponse = NextResponse.redirect(url);
-        redirectResponse.cookies.set("unverified_redirect", "1", {
-          path: "/", maxAge: 10, httpOnly: true, sameSite: "lax",
-        });
-        return redirectResponse;
+      if (!isAdmin) {
+        // Always do a fresh DB check — never trust stale JWT metadata for access gates.
+        // This single query costs ~5ms on Supabase and is worth it to avoid
+        // blocking newly verified+subscribed users whose JWT hasn't refreshed yet.
+        const { data: profile } = await supabase
+          .from("users")
+          .select("is_verified, is_subscribed, is_blocked, subscription_expiry, role")
+          .eq("id", user.id)
+          .single();
+
+        // Block suspended users entirely
+        if (profile?.is_blocked) {
+          const url = request.nextUrl.clone();
+          url.pathname = "/";
+          return NextResponse.redirect(url);
+        }
+
+        // Admin role in DB overrides everything
+        if (profile?.role === "admin") {
+          return supabaseResponse;
+        }
+
+        const isVerified = profile?.is_verified === true;
+        const subExpiry = profile?.subscription_expiry ? new Date(profile.subscription_expiry) : null;
+        const isSubscribed = profile?.is_subscribed === true && (!subExpiry || subExpiry > new Date());
+
+        // Need BOTH verified AND active subscription to access marketplace
+        if (!isVerified || !isSubscribed) {
+          const url = request.nextUrl.clone();
+          url.pathname = "/";
+          const redirectResponse = NextResponse.redirect(url);
+          redirectResponse.cookies.set("unverified_redirect", "1", {
+            path: "/", maxAge: 10, httpOnly: true, sameSite: "lax",
+          });
+          return redirectResponse;
+        }
       }
     }
 

@@ -19,15 +19,14 @@ export default async function AdminSubscriptionsPage() {
 
   const { data: withTier, error: tierError } = await db
     .from("users")
-    .select("id, email, role, is_verified, verification_status, is_subscribed, subscription_expiry, subscription_tier, is_blocked, created_at")
+    .select("id, email, full_name, company_name, role, is_verified, verification_status, is_subscribed, subscription_expiry, subscription_tier, is_blocked, created_at")
     .order("is_subscribed", { ascending: false });
 
   if (tierError?.message?.includes("subscription_tier")) {
-    // Column doesn't exist yet — fetch without it
     needsMigration = true;
     const { data: withoutTier } = await db
       .from("users")
-      .select("id, email, role, is_verified, verification_status, is_subscribed, subscription_expiry, is_blocked, created_at")
+      .select("id, email, full_name, company_name, role, is_verified, verification_status, is_subscribed, subscription_expiry, is_blocked, created_at")
       .order("is_subscribed", { ascending: false });
     // Add null tier to each row so the component type is satisfied
     data = (withoutTier ?? []).map((u) => ({ ...u, subscription_tier: null })) as AdminUser[];
