@@ -5,7 +5,7 @@
 
 UPDATE public.users 
 SET role = 'admin'
-WHERE email = 'your-email@here.com';
+WHERE email = 'admin@gmail.com';
 
 -- Verify it worked (should return your row with role = 'admin')
 SELECT id, email, role FROM public.users WHERE email = 'your-email@here.com';
