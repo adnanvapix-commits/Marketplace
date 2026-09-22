@@ -73,25 +73,30 @@ export async function updateSession(request: NextRequest) {
       return supabaseResponse;
     }
 
-    // 3. Login required
+    // 3. Login required for page routes
     const loginRequired = ["/sell", "/buy", "/chat", "/dashboard", "/profile", "/subscription", "/help", "/account"];
     const requiresLogin = loginRequired.some((p) => path.startsWith(p));
     if (requiresLogin && !user) {
+      // API routes get 401 JSON, page routes get redirect to login
+      if (path.startsWith("/api/")) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       return NextResponse.redirect(url);
     }
 
-    // 4. Subscription gate — only for buy/sell/chat (marketplace actions)
-    //    Verification is independent — profile/account/subscription are always accessible
-    //    so users can see their status and subscribe after being verified.
-    //
-    //    IMPORTANT: JWT metadata (user_metadata) can be STALE — it's only refreshed
-    //    when the user's session token is renewed. When an admin approves a user,
-    //    the DB is updated but the user's existing JWT is unchanged until they
-    //    get a new token. So we ALWAYS do a fresh DB check here instead of
-    //    trusting user_metadata, to avoid blocking newly approved users.
-    const subscriptionRequired = ["/sell", "/buy", "/chat"];
+    // 4. Subscription gate — buy/sell/chat pages AND their API routes
+    //    /api/products/search|suggest|view → requires subscription
+    //    /api/chat/send|messages → requires subscription
+    //    /api/products/mutate → requires subscription (also checked in route handler)
+    //    /api/upload/sign → requires subscription (also checked in route handler)
+    const subscriptionRequired = [
+      "/sell", "/buy", "/chat",
+      "/api/products/search", "/api/products/suggest", "/api/products/mutate",
+      "/api/chat/send", "/api/chat/messages",
+      "/api/upload/sign",
+    ];
     const requiresSubscription = subscriptionRequired.some((p) => path.startsWith(p));
 
     if (requiresSubscription && user) {
@@ -110,6 +115,9 @@ export async function updateSession(request: NextRequest) {
 
         // Block suspended users entirely
         if (profile?.is_blocked) {
+          if (path.startsWith("/api/")) {
+            return NextResponse.json({ error: "Account suspended" }, { status: 403 });
+          }
           const url = request.nextUrl.clone();
           url.pathname = "/";
           return NextResponse.redirect(url);
@@ -126,17 +134,22 @@ export async function updateSession(request: NextRequest) {
 
         // Need BOTH verified AND active subscription to access marketplace
         if (!isVerified || !isSubscribed) {
+          // API routes: return 403 JSON — redirect makes no sense for fetch() calls
+          if (path.startsWith("/api/")) {
+            return NextResponse.json(
+              { error: !isVerified ? "Account not verified" : "Active subscription required" },
+              { status: 403 }
+            );
+          }
+          // Page routes: send to dedicated explanation page
           const url = request.nextUrl.clone();
-          // Send to a dedicated page that explains why access was denied
-          // and what the user needs to do — much better UX than silent redirect to homepage
           url.pathname = "/access-required";
           url.searchParams.set("reason", !isVerified ? "not_verified" : "no_subscription");
           url.searchParams.set("from", path);
           return NextResponse.redirect(url);
         }
 
-        // Access granted — stamp a short-lived internal header so the search API
-        // can skip its duplicate DB check, saving one full DB round trip per search.
+        // Access granted — stamp internal header for downstream route handlers
         supabaseResponse.headers.set("x-bulkora-access-verified", user.id);
       }    }
 

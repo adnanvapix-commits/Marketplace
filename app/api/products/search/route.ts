@@ -6,28 +6,43 @@ const PAGE_SIZE = 16;
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
 
-  // Use getSession() — reads from cookie locally, ZERO network call.
-  // Access control for this endpoint is enforced at two layers:
-  //   1. Middleware — DB-verified is_verified + is_subscribed check before /buy page loads
-  //   2. RLS on products table — service role bypasses for admin, anon/user roles restricted
-  // We do NOT re-run the DB access check here on every search request — that was a
-  // duplicate round trip that added 30-50ms to every single product search.
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // getUser() verifies the JWT cryptographically against Supabase Auth.
+  // We need this — getSession() reads the JWT locally and user_metadata
+  // is user-writable, meaning anyone can forge {role:"admin"} in their token.
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const user = session.user;
+  // Always verify subscription+verification via DB — never trust user_metadata.
+  // user_metadata is writable by the client (supabase.auth.updateUser) so
+  // a user could set is_subscribed:true or role:"admin" in their own metadata.
   const adminEmail = process.env.ADMIN_EMAIL ?? process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
-  const isAdmin = user.email === adminEmail || user.user_metadata?.role === "admin";
+  let hasAccess = user.email === adminEmail; // email is server-set, safe to trust
 
-  // For non-admin: trust the middleware DB check that already ran for this session.
-  // The JWT metadata is updated by the sync_user_metadata trigger on any admin action,
-  // so expired/revoked access is caught within seconds on the next session refresh.
-  // Direct API abuse (bypassing the browser) is blocked by RLS on the products table.
-  if (!isAdmin) {
-    // Quick guard: if JWT metadata explicitly shows blocked, deny immediately (no DB call)
-    if (user.user_metadata?.is_blocked === true) {
-      return NextResponse.json({ error: "Account suspended" }, { status: 403 });
+  if (!hasAccess) {
+    const { data: profile } = await supabase
+      .from("users")
+      .select("is_verified, is_subscribed, is_blocked, subscription_expiry, role")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile || profile.is_blocked) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
+
+    if (profile.role === "admin") {
+      hasAccess = true;
+    } else {
+      const subExpiry = profile.subscription_expiry
+        ? new Date(profile.subscription_expiry)
+        : null;
+      const isSubscribed =
+        profile.is_subscribed === true && (!subExpiry || subExpiry > new Date());
+      hasAccess = profile.is_verified === true && isSubscribed;
+    }
+  }
+
+  if (!hasAccess) {
+    return NextResponse.json({ error: "Access denied" }, { status: 403 });
   }
 
   // ── Parse params ───────────────────────────────────────────────────────
@@ -51,7 +66,6 @@ export async function GET(req: NextRequest) {
   });
 
   if (error) {
-    // RPC not yet deployed — fall back to direct query
     return fallbackSearch(supabase, sp, page);
   }
 
@@ -63,6 +77,7 @@ export async function GET(req: NextRequest) {
   };
 
   const res = NextResponse.json(result);
+  // Cache at Vercel CDN edge — safe because access is already verified above
   res.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=60");
   return res;
 }
@@ -81,16 +96,16 @@ async function fallbackSearch(
     .eq("is_active", true)
     .eq("is_blocked", false);
 
-  const q        = sp.get("q")?.trim() || "";
-  const category = sp.get("category") || "";
-  const condition= sp.get("condition") || "";
-  const brand    = sp.get("brand")?.trim() || "";
-  const location = sp.get("location")?.trim() || "";
-  const minPrice = sp.get("minPrice") ? parseFloat(sp.get("minPrice")!) : null;
-  const maxPrice = sp.get("maxPrice") ? parseFloat(sp.get("maxPrice")!) : null;
-  const minQty   = sp.get("minQty")   ? parseInt(sp.get("minQty")!)     : null;
-  const minMoq   = sp.get("minMoq")   ? parseInt(sp.get("minMoq")!)     : null;
-  const sort     = sp.get("sort") || "alpha";
+  const q         = sp.get("q")?.trim()       || "";
+  const category  = sp.get("category")        || "";
+  const condition = sp.get("condition")       || "";
+  const brand     = sp.get("brand")?.trim()   || "";
+  const location  = sp.get("location")?.trim()|| "";
+  const minPrice  = sp.get("minPrice") ? parseFloat(sp.get("minPrice")!) : null;
+  const maxPrice  = sp.get("maxPrice") ? parseFloat(sp.get("maxPrice")!) : null;
+  const minQty    = sp.get("minQty")   ? parseInt(sp.get("minQty")!)     : null;
+  const minMoq    = sp.get("minMoq")   ? parseInt(sp.get("minMoq")!)     : null;
+  const sort      = sp.get("sort")     || "alpha";
 
   if (q)         query = query.or(`title.ilike.%${q}%,brand.ilike.%${q}%`);
   if (category)  query = query.eq("category", category);
@@ -102,16 +117,21 @@ async function fallbackSearch(
   if (minQty !== null)   query = query.gte("quantity", minQty);
   if (minMoq !== null)   query = query.lte("minimum_order_quantity", minMoq);
 
-  if (sort === "price_asc")       query = query.order("price", { ascending: true });
-  else if (sort === "price_desc") query = query.order("price", { ascending: false });
-  else if (sort === "qty_desc")   query = query.order("quantity", { ascending: false });
+  if (sort === "price_asc")       query = query.order("price",      { ascending: true  });
+  else if (sort === "price_desc") query = query.order("price",      { ascending: false });
+  else if (sort === "qty_desc")   query = query.order("quantity",   { ascending: false });
   else if (sort === "newest")     query = query.order("created_at", { ascending: false });
-  else                            query = query.order("title", { ascending: true });
+  else                            query = query.order("title",      { ascending: true  });
 
   const { data, count, error } = await query.range(0, 499);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  type RawProduct = Record<string, unknown> & { users?: { email: string; company_name?: string; subscription_tier?: string | null } | Array<{ email: string; company_name?: string; subscription_tier?: string | null }> };
+  type RawProduct = Record<string, unknown> & {
+    users?:
+      | { email: string; company_name?: string; subscription_tier?: string | null }
+      | Array<{ email: string; company_name?: string; subscription_tier?: string | null }>;
+  };
+
   const normalized = (data ?? []).map((p: RawProduct) => ({
     ...p,
     users: Array.isArray(p.users) ? p.users[0] ?? null : p.users,
@@ -123,16 +143,27 @@ async function fallbackSearch(
     const tb = TIER_PRIORITY[(b.p.users as { subscription_tier?: string } | null)?.subscription_tier ?? ""] ?? 4;
     return ta !== tb ? ta - tb : a.i - b.i;
   });
-  const sortedNormalized = tagged.map(({ p }) => p);
+  const sorted = tagged.map(({ p }) => p);
 
   const from = (page - 1) * PAGE_SIZE;
-  const paginated = sortedNormalized.slice(from, from + PAGE_SIZE);
+  const paginated = sorted.slice(from, from + PAGE_SIZE);
   const products = paginated.map((p) => ({
     ...p,
-    users: p.users ? { email: (p.users as { email: string; company_name?: string }).email, company_name: (p.users as { email: string; company_name?: string }).company_name } : null,
+    users: p.users
+      ? {
+          email: (p.users as { email: string; company_name?: string }).email,
+          company_name: (p.users as { email: string; company_name?: string }).company_name,
+        }
+      : null,
   }));
 
-  const res = NextResponse.json({ products, count: count ?? sortedNormalized.length, totalPages: Math.ceil((count ?? sortedNormalized.length) / PAGE_SIZE), page });
+  const total = count ?? sorted.length;
+  const res = NextResponse.json({
+    products,
+    count: total,
+    totalPages: Math.ceil(total / PAGE_SIZE),
+    page,
+  });
   res.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=60");
   return res;
 }
