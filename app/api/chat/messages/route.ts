@@ -35,5 +35,14 @@ export async function GET(req: NextRequest) {
     .limit(200);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Mark messages sent to this user as read (fire-and-forget, non-blocking)
+  void db.from("messages")
+    .update({ is_read: true })
+    .eq("receiver_id", userId)
+    .eq("product_id", productId)
+    .eq("sender_id", otherUserId)
+    .eq("is_read", false);
+
   return NextResponse.json({ messages: data ?? [] });
 }

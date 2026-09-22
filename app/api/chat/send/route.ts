@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
     receiver_id: receiverId,
     product_id:  productId,
     message:     message.trim(),
+    is_read:     false,
   });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
