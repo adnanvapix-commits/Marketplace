@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createPooledAdminClient as createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 async function verifyAdmin() {
   const supabase = await createClient();

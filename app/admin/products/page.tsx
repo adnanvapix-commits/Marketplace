@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { createPooledAdminClient as createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/supabase/admin";
 import ProductsTable from "./ProductsTable";
 
 // Cache for 30s — prevents DB calls on every navigation click

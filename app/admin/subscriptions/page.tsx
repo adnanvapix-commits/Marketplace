@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { createPooledAdminClient as createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/supabase/admin";
 import SubscriptionsTable from "./SubscriptionsTable";
 import type { AdminUser } from "@/lib/services/adminService";
 import Link from "next/link";

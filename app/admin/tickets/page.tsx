@@ -1,4 +1,4 @@
-import { createPooledAdminClient as createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/supabase/admin";
 import TicketsTable from "./TicketsTable";
 
 // Cache for 30s

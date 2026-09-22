@@ -1,4 +1,4 @@
-import { createPooledAdminClient as createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { Users, ShoppingBag, MessageCircle, CreditCard, TrendingUp, ArrowRight, Eye, Crown, Star, Award, TicketCheck, UserCheck, Clock } from "lucide-react";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils/formatDate";
