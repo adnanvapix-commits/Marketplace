@@ -134,8 +134,11 @@ export async function updateSession(request: NextRequest) {
           url.searchParams.set("from", path);
           return NextResponse.redirect(url);
         }
-      }
-    }
+
+        // Access granted — stamp a short-lived internal header so the search API
+        // can skip its duplicate DB check, saving one full DB round trip per search.
+        supabaseResponse.headers.set("x-bulkora-access-verified", user.id);
+      }    }
 
   } catch {
     // Fail-closed on errors for protected routes

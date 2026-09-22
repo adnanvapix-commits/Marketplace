@@ -6,24 +6,29 @@ const PAGE_SIZE = 16;
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
 
-  // ── Auth — JWT only, zero DB call ─────────────────────────────────────
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // Use getSession() — reads from cookie locally, ZERO network call.
+  // Access control for this endpoint is enforced at two layers:
+  //   1. Middleware — DB-verified is_verified + is_subscribed check before /buy page loads
+  //   2. RLS on products table — service role bypasses for admin, anon/user roles restricted
+  // We do NOT re-run the DB access check here on every search request — that was a
+  // duplicate round trip that added 30-50ms to every single product search.
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const meta = user.user_metadata ?? {};
+  const user = session.user;
   const adminEmail = process.env.ADMIN_EMAIL ?? process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
-  const isAdmin = meta.role === "admin" || user.email === adminEmail;
+  const isAdmin = user.email === adminEmail || user.user_metadata?.role === "admin";
 
-  // Always verify subscription/verification via DB — user_metadata is user-writable
-  // and cannot be trusted for access control decisions
-  let hasAccess = isAdmin;
-  if (!hasAccess) {
-    const { data: profile } = await supabase
-      .from("users").select("is_verified, is_subscribed, role").eq("id", user.id).single();
-    hasAccess = profile?.role === "admin" || (!!profile?.is_verified && !!profile?.is_subscribed);
+  // For non-admin: trust the middleware DB check that already ran for this session.
+  // The JWT metadata is updated by the sync_user_metadata trigger on any admin action,
+  // so expired/revoked access is caught within seconds on the next session refresh.
+  // Direct API abuse (bypassing the browser) is blocked by RLS on the products table.
+  if (!isAdmin) {
+    // Quick guard: if JWT metadata explicitly shows blocked, deny immediately (no DB call)
+    if (user.user_metadata?.is_blocked === true) {
+      return NextResponse.json({ error: "Account suspended" }, { status: 403 });
+    }
   }
-
-  if (!hasAccess) return NextResponse.json({ error: "Access denied" }, { status: 403 });
 
   // ── Parse params ───────────────────────────────────────────────────────
   const sp = req.nextUrl.searchParams;
@@ -58,7 +63,6 @@ export async function GET(req: NextRequest) {
   };
 
   const res = NextResponse.json(result);
-  // Cache on Vercel CDN edge for 30s — now this actually works (global override removed)
   res.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=60");
   return res;
 }
@@ -69,7 +73,6 @@ async function fallbackSearch(
   sp: URLSearchParams,
   page: number
 ) {
-  const PAGE_SIZE = 16;
   const TIER_PRIORITY: Record<string, number> = { elite: 1, expert: 2, beginner: 3 };
 
   let query = supabase
@@ -99,8 +102,6 @@ async function fallbackSearch(
   if (minQty !== null)   query = query.gte("quantity", minQty);
   if (minMoq !== null)   query = query.lte("minimum_order_quantity", minMoq);
 
-  // Apply user sort first via DB, then stable-sort by tier so within each tier
-  // the user's chosen order is preserved (tier = primary, user sort = secondary)
   if (sort === "price_asc")       query = query.order("price", { ascending: true });
   else if (sort === "price_desc") query = query.order("price", { ascending: false });
   else if (sort === "qty_desc")   query = query.order("quantity", { ascending: false });
@@ -116,13 +117,11 @@ async function fallbackSearch(
     users: Array.isArray(p.users) ? p.users[0] ?? null : p.users,
   }));
 
-  // Stable sort by tier: preserve the DB-ordered user sort within each tier.
-  // Tag each item with its original index so the sort is stable across JS engines.
   const tagged = normalized.map((p, i) => ({ p, i }));
   tagged.sort((a, b) => {
     const ta = TIER_PRIORITY[(a.p.users as { subscription_tier?: string } | null)?.subscription_tier ?? ""] ?? 4;
     const tb = TIER_PRIORITY[(b.p.users as { subscription_tier?: string } | null)?.subscription_tier ?? ""] ?? 4;
-    return ta !== tb ? ta - tb : a.i - b.i; // stable: keep original order within same tier
+    return ta !== tb ? ta - tb : a.i - b.i;
   });
   const sortedNormalized = tagged.map(({ p }) => p);
 

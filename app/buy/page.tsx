@@ -8,9 +8,10 @@ import ProductCard from "@/components/ProductCard";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import type { Product } from "@/types";
 
-// Shared in-memory cache (same instance as HomeClient if bundled together)
+// Shared in-memory cache (persists across re-renders, cleared on full page reload)
+// Increased TTL to 60s — products don't change every second
 const cache = new Map<string, { products: Product[]; count: number; totalPages: number; ts: number }>();
-const CACHE_TTL = 30_000;
+const CACHE_TTL = 60_000; // 60 seconds
 
 /* ── Inner component (needs useSearchParams inside Suspense) ── */
 function BuyPageInner() {
@@ -56,14 +57,22 @@ function BuyPageInner() {
 
     const cacheKey = params.toString();
     const cached = cache.get(cacheKey);
-    if (cached && Date.now() - cached.ts < CACHE_TTL) {
+
+    // Show cached data immediately (stale-while-revalidate pattern)
+    // If cache is fresh (< 60s), return instantly — no fetch needed
+    // If cache is stale (60s-120s), show it immediately AND fetch fresh data silently
+    // If cache is expired (> 120s), show skeleton and fetch fresh
+    const STALE_TTL = 120_000; // show stale up to 2 minutes
+    if (cached) {
+      const age = Date.now() - cached.ts;
       setProducts(cached.products);
       setCount(cached.count);
       setTotalPages(cached.totalPages);
-      return;
+      if (age < CACHE_TTL) return; // fresh — done
+      // Stale: continue fetch silently (no loading spinner — data already showing)
     }
 
-    setLoading(true);
+    setLoading(!cached); // only show spinner if no data at all
     setError("");
 
     try {
@@ -161,8 +170,8 @@ function BuyPageInner() {
             </div>
           )}
 
-          {/* Loading skeleton */}
-          {loading && (
+          {/* Loading skeleton — only shown when no cached data exists */}
+          {loading && products.length === 0 && (
             <div className="flex flex-col gap-2">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="skeleton h-20 rounded-2xl" />
@@ -189,17 +198,20 @@ function BuyPageInner() {
       )}
 
           {/* Results */}
-          {!loading && searched && !error && (
+          {searched && !error && products.length > 0 && (
             <>
               {/* Meta row */}
               <div className="flex items-center justify-between mb-3">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 flex items-center gap-2">
                   <span className="font-semibold text-gray-700">{count.toLocaleString()}</span>{" "}
                   product{count !== 1 ? "s" : ""} found
                   {debouncedQuery && (
                     <span> for{" "}
                       <span className="font-medium text-gray-700">&quot;{debouncedQuery}&quot;</span>
                     </span>
+                  )}
+                  {loading && products.length > 0 && (
+                    <Loader2 size={13} className="animate-spin text-gray-400 ml-1" />
                   )}
                 </p>
                 {true && (
@@ -210,7 +222,7 @@ function BuyPageInner() {
               </div>
 
               {/* Empty */}
-              {products.length === 0 ? (
+              {products.length === 0 && !loading ? (
                 <div className="flex flex-col items-center justify-center py-16 text-gray-400">
                   <ShoppingBag size={48} className="mb-4 opacity-20" />
                   <p className="font-medium text-gray-600">No products found</p>
