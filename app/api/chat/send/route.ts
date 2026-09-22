@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireMarketplaceAccess } from "@/lib/supabase/accessCheck";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_MESSAGE_LENGTH = 2000;
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
-const RATE_LIMIT_MAX = 30;            // max 30 messages per minute per user
+const RATE_LIMIT_MAX = 30;           // max 30 messages per minute per user
 
-// Simple in-memory rate limiter (resets on server restart — sufficient for edge protection)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
 function checkRateLimit(userId: string): boolean {
@@ -23,36 +22,35 @@ function checkRateLimit(userId: string): boolean {
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // Require verified + active subscription — cannot bypass via JWT manipulation
+  const access = await requireMarketplaceAccess();
+  if (!access.allowed) {
+    return NextResponse.json({ error: access.error }, { status: access.status });
+  }
 
-  // Rate limiting
-  if (!checkRateLimit(user.id)) {
+  const { userId } = access;
+
+  if (!checkRateLimit(userId)) {
     return NextResponse.json({ error: "Too many messages. Please slow down." }, { status: 429 });
   }
 
   const { receiverId, productId, message } = await req.json();
 
-  // Validate required fields
   if (!receiverId || !productId || !message?.trim())
     return NextResponse.json({ error: "receiverId, productId and message are required" }, { status: 400 });
 
-  // Validate UUIDs
   if (!UUID_REGEX.test(receiverId) || !UUID_REGEX.test(productId))
     return NextResponse.json({ error: "Invalid ID format" }, { status: 400 });
 
-  // Enforce message length
   if (message.trim().length > MAX_MESSAGE_LENGTH)
     return NextResponse.json({ error: `Message too long (max ${MAX_MESSAGE_LENGTH} chars)` }, { status: 400 });
 
-  // Prevent self-messaging
-  if (receiverId === user.id)
+  if (receiverId === userId)
     return NextResponse.json({ error: "Cannot send message to yourself" }, { status: 400 });
 
   const db = createAdminClient();
   const { error } = await db.from("messages").insert({
-    sender_id:   user.id,
+    sender_id:   userId,
     receiver_id: receiverId,
     product_id:  productId,
     message:     message.trim(),

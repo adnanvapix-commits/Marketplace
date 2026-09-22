@@ -127,12 +127,12 @@ export async function updateSession(request: NextRequest) {
         // Need BOTH verified AND active subscription to access marketplace
         if (!isVerified || !isSubscribed) {
           const url = request.nextUrl.clone();
-          url.pathname = "/";
-          const redirectResponse = NextResponse.redirect(url);
-          redirectResponse.cookies.set("unverified_redirect", "1", {
-            path: "/", maxAge: 10, httpOnly: true, sameSite: "lax",
-          });
-          return redirectResponse;
+          // Send to a dedicated page that explains why access was denied
+          // and what the user needs to do — much better UX than silent redirect to homepage
+          url.pathname = "/access-required";
+          url.searchParams.set("reason", !isVerified ? "not_verified" : "no_subscription");
+          url.searchParams.set("from", path);
+          return NextResponse.redirect(url);
         }
       }
     }

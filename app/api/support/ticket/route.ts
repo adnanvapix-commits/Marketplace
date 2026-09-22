@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createPooledAdminClient as createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const VALID_CATEGORIES = ["subscription", "account", "product", "payment", "verification", "technical", "other"];
 const VALID_STATUSES   = ["open", "in_progress", "resolved", "closed"];

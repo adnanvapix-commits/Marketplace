@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireMarketplaceAccess } from "@/lib/supabase/accessCheck";
 import crypto from "crypto";
 
-// Server-side signed Cloudinary upload endpoint
-// Only authenticated users can get an upload signature
+// Server-side signed Cloudinary upload endpoint.
+// Requires verified + active subscription — prevents unsubscribed users
+// from uploading images to our Cloudinary account.
 export async function POST() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const access = await requireMarketplaceAccess();
+  if (!access.allowed) {
+    return NextResponse.json({ error: access.error }, { status: access.status });
+  }
 
   const apiSecret = process.env.CLOUDINARY_API_SECRET;
   const apiKey    = process.env.CLOUDINARY_API_KEY;
@@ -19,7 +21,6 @@ export async function POST() {
   const timestamp = Math.round(Date.now() / 1000);
   const folder    = "bulkora/chat";
 
-  // Generate signature: sign timestamp + folder with API secret
   const toSign    = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
   const signature = crypto.createHash("sha1").update(toSign).digest("hex");
 

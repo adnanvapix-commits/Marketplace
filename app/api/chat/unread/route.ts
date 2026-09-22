@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-// Returns count of unread messages for the current user
-// Lightweight: head-only count query, no message data returned
+// Returns count of unread messages — requires auth (subscription not enforced here
+// since the count badge in the navbar should always show, even for users
+// whose subscription just expired, so they know they have pending messages)
 export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

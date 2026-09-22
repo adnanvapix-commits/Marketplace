@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createPooledAdminClient as createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -18,10 +18,24 @@ export async function POST(req: NextRequest) {
 
   const db = createAdminClient();
 
-  // Verify user is verified via DB (not user_metadata)
-  const { data: profile } = await db.from("users").select("is_verified").eq("id", user.id).single();
-  if (!profile?.is_verified)
-    return NextResponse.json({ error: "Account not verified" }, { status: 403 });
+  // Verify user is verified AND subscribed via DB (not user_metadata — user-writable)
+  const { data: profile } = await db
+    .from("users")
+    .select("is_verified, is_subscribed, subscription_expiry, role")
+    .eq("id", user.id)
+    .single();
+
+  const adminEmail = process.env.ADMIN_EMAIL ?? process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
+  const isAdmin = profile?.role === "admin" || user.email === adminEmail;
+
+  if (!isAdmin) {
+    if (!profile?.is_verified)
+      return NextResponse.json({ error: "Account not verified" }, { status: 403 });
+    const subExpiry = profile.subscription_expiry ? new Date(profile.subscription_expiry) : null;
+    const isSubscribed = profile.is_subscribed === true && (!subExpiry || subExpiry > new Date());
+    if (!isSubscribed)
+      return NextResponse.json({ error: "Active subscription required to post listings" }, { status: 403 });
+  }
 
   const body = await req.json();
   const { title, description, price, category, location, brand, quantity, minimum_order_quantity, condition, image_url } = body;
