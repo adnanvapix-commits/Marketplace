@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Eye, EyeOff, ArrowRight, Building2, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { generateAvatarDataUri } from "@/lib/utils/generateAvatar";
+import PhoneInput from "@/components/PhoneInput";
 import toast from "react-hot-toast";
 
 const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
@@ -16,7 +17,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [fullName, setFullName] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
+  // Default to UAE country code (+971)
+  const [whatsapp, setWhatsapp] = useState("+971");
   const [whatsappError, setWhatsappError] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -196,13 +198,17 @@ export default function LoginPage() {
               {isSignup && (
                 <>
                   <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5">
-                      WhatsApp Number <span className="text-red-400">*</span>
-                    </label>
-                    <input type="tel" value={whatsapp}
-                      onChange={(e) => { setWhatsapp(e.target.value); if (whatsappError) validateWhatsapp(e.target.value); }}
-                      placeholder="+971501234567" className="input min-h-[44px]" required />
-                    {whatsappError && <p className="text-xs text-red-500 mt-1.5 font-medium">{whatsappError}</p>}
+                    <PhoneInput
+                      label="WhatsApp Number"
+                      value={whatsapp}
+                      onChange={(full) => {
+                        setWhatsapp(full);
+                        if (whatsappError) setWhatsappError("");
+                      }}
+                      placeholder="501234567"
+                      required
+                      error={whatsappError}
+                    />
                   </div>
                   <div>
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5">

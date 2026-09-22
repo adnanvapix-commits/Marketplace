@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { User, Building2, Phone, Globe, CheckSquare, Square, Loader2, CheckCircle, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import PhoneInput from "@/components/PhoneInput";
 import toast from "react-hot-toast";
 
 interface Profile {
@@ -19,7 +20,11 @@ export default function AccountForm({ profile, email, userId }: { profile: Profi
 
   const [fullName, setFullName] = useState(profile?.full_name ?? "");
   const [companyName, setCompanyName] = useState(profile?.company_name ?? "");
-  const [phone, setPhone] = useState(profile?.phone ?? "");
+  const [phone, setPhone] = useState(
+    profile?.phone
+      ? (profile.phone.startsWith("+") ? profile.phone : "+971" + profile.phone)
+      : "+971"
+  );
   const [country, setCountry] = useState(profile?.country ?? "UAE");
   const [roles, setRoles] = useState<Set<string>>(new Set(existingRoles));
   const [roleError, setRoleError] = useState("");
@@ -114,11 +119,13 @@ export default function AccountForm({ profile, email, userId }: { profile: Profi
         {/* Phone + Country */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5 mb-1.5">
-              <Phone size={11} /> Phone <span className="text-red-400">*</span>
-            </label>
-            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-              className="input min-h-[44px]" required />
+            <PhoneInput
+              label="Phone"
+              value={phone}
+              onChange={setPhone}
+              placeholder="501234567"
+              required
+            />
           </div>
           <div>
             <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5 mb-1.5">
