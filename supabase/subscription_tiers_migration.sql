@@ -348,12 +348,12 @@ BEGIN
         WHEN 'beginner' THEN 3
         ELSE 4
       END ASC,
-      -- User-chosen secondary sort
-      CASE WHEN p_sort = 'price_asc'  THEN pr.price::text         END ASC,
-      CASE WHEN p_sort = 'price_desc' THEN pr.price::text         END DESC,
-      CASE WHEN p_sort = 'qty_desc'   THEN pr.quantity::text      END DESC,
-      CASE WHEN p_sort = 'newest'     THEN pr.created_at::text    END DESC,
-      CASE WHEN p_sort = 'alpha' OR p_sort IS NULL THEN pr.title  END ASC
+      -- User-chosen secondary sort (no ::text casts — proper numeric/timestamp ordering)
+      CASE WHEN p_sort = 'price_asc'                    THEN pr.price       END ASC,
+      CASE WHEN p_sort = 'price_desc'                   THEN pr.price       END DESC,
+      CASE WHEN p_sort = 'qty_desc'                     THEN pr.quantity    END DESC,
+      CASE WHEN p_sort = 'newest'                       THEN pr.created_at  END DESC,
+      CASE WHEN p_sort = 'alpha' OR p_sort IS NULL      THEN pr.title       END ASC
     LIMIT p_page_size
     OFFSET v_offset
   ) t;

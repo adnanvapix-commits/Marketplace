@@ -99,6 +99,8 @@ async function fallbackSearch(
   if (minQty !== null)   query = query.gte("quantity", minQty);
   if (minMoq !== null)   query = query.lte("minimum_order_quantity", minMoq);
 
+  // Apply user sort first via DB, then stable-sort by tier so within each tier
+  // the user's chosen order is preserved (tier = primary, user sort = secondary)
   if (sort === "price_asc")       query = query.order("price", { ascending: true });
   else if (sort === "price_desc") query = query.order("price", { ascending: false });
   else if (sort === "qty_desc")   query = query.order("quantity", { ascending: false });
@@ -114,20 +116,24 @@ async function fallbackSearch(
     users: Array.isArray(p.users) ? p.users[0] ?? null : p.users,
   }));
 
-  normalized.sort((a, b) => {
-    const ta = TIER_PRIORITY[(a.users as { subscription_tier?: string } | null)?.subscription_tier ?? ""] ?? 4;
-    const tb = TIER_PRIORITY[(b.users as { subscription_tier?: string } | null)?.subscription_tier ?? ""] ?? 4;
-    return ta - tb;
+  // Stable sort by tier: preserve the DB-ordered user sort within each tier.
+  // Tag each item with its original index so the sort is stable across JS engines.
+  const tagged = normalized.map((p, i) => ({ p, i }));
+  tagged.sort((a, b) => {
+    const ta = TIER_PRIORITY[(a.p.users as { subscription_tier?: string } | null)?.subscription_tier ?? ""] ?? 4;
+    const tb = TIER_PRIORITY[(b.p.users as { subscription_tier?: string } | null)?.subscription_tier ?? ""] ?? 4;
+    return ta !== tb ? ta - tb : a.i - b.i; // stable: keep original order within same tier
   });
+  const sortedNormalized = tagged.map(({ p }) => p);
 
   const from = (page - 1) * PAGE_SIZE;
-  const paginated = normalized.slice(from, from + PAGE_SIZE);
+  const paginated = sortedNormalized.slice(from, from + PAGE_SIZE);
   const products = paginated.map((p) => ({
     ...p,
     users: p.users ? { email: (p.users as { email: string; company_name?: string }).email, company_name: (p.users as { email: string; company_name?: string }).company_name } : null,
   }));
 
-  const res = NextResponse.json({ products, count: count ?? normalized.length, totalPages: Math.ceil((count ?? normalized.length) / PAGE_SIZE), page });
+  const res = NextResponse.json({ products, count: count ?? sortedNormalized.length, totalPages: Math.ceil((count ?? sortedNormalized.length) / PAGE_SIZE), page });
   res.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=60");
   return res;
 }
