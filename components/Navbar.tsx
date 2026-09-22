@@ -91,12 +91,6 @@ export default function Navbar() {
           <NavLink href="/buy">
             <ShoppingBag size={15} className="shrink-0" /> Buy
           </NavLink>
-          <NavLink href="/about">
-            <Info size={15} className="shrink-0" /> About
-          </NavLink>
-          <NavLink href="/help">
-            <LifeBuoy size={15} className="shrink-0" /> Help
-          </NavLink>
 
           {isLoggedIn ? (
             <>
@@ -115,17 +109,17 @@ export default function Navbar() {
                 )}
               </div>
 
-              <NavLink href={isAdmin ? "/admin" : "/dashboard"}>
-                {isAdmin ? <Shield size={15} className="shrink-0" /> : <LayoutDashboard size={15} className="shrink-0" />}
-                {isAdmin ? "Admin" : "Dashboard"}
+              <NavLink href="/wishlist">
+                <Heart size={15} className="shrink-0" /> Wishlist
               </NavLink>
 
               <NavLink href="/profile">
                 <User size={15} className="shrink-0" /> Profile
               </NavLink>
 
-              <NavLink href="/wishlist">
-                <Heart size={15} className="shrink-0" /> Wishlist
+              <NavLink href={isAdmin ? "/admin" : "/dashboard"}>
+                {isAdmin ? <Shield size={15} className="shrink-0" /> : <LayoutDashboard size={15} className="shrink-0" />}
+                {isAdmin ? "Admin" : "Dashboard"}
               </NavLink>
 
               <Link href="/subscription" prefetch className={`flex items-center gap-1.5 text-sm font-medium whitespace-nowrap transition-all duration-150 px-3 py-2 rounded-lg ${
@@ -134,6 +128,14 @@ export default function Navbar() {
                 <CreditCard size={15} className="shrink-0" />
                 {subTier ? <SubscriptionBadge tier={subTier} size="sm" showIcon={false} /> : "Plan"}
               </Link>
+
+              <NavLink href="/about">
+                <Info size={15} className="shrink-0" /> About
+              </NavLink>
+
+              <NavLink href="/help">
+                <LifeBuoy size={15} className="shrink-0" /> Help
+              </NavLink>
 
               <span className="w-px h-5 bg-cream-300 mx-1" />
 
@@ -152,12 +154,20 @@ export default function Navbar() {
               </form>
             </>
           ) : (
-            <Link
-              href="/login"
-              className="ml-2 btn-primary text-sm flex items-center gap-1.5 animate-pulse-gold"
-            >
-              Login / Sign Up
-            </Link>
+            <>
+              <NavLink href="/about">
+                <Info size={15} className="shrink-0" /> About
+              </NavLink>
+              <NavLink href="/help">
+                <LifeBuoy size={15} className="shrink-0" /> Help
+              </NavLink>
+              <Link
+                href="/login"
+                className="ml-2 btn-primary text-sm flex items-center gap-1.5 animate-pulse-gold"
+              >
+                Login / Sign Up
+              </Link>
+            </>
           )}
         </div>
 
@@ -186,10 +196,6 @@ export default function Navbar() {
               active={isActive("/")} onClick={() => setOpen(false)} />
             <MobileLink href="/buy" icon={<ShoppingBag size={18} />} label="Buy"
               active={isActive("/buy")} onClick={() => setOpen(false)} />
-            <MobileLink href="/about" icon={<Info size={18} />} label="About"
-              active={isActive("/about")} onClick={() => setOpen(false)} />
-            <MobileLink href="/help" icon={<LifeBuoy size={18} />} label="Help & Support"
-              active={isActive("/help")} onClick={() => setOpen(false)} />
 
             {isLoggedIn ? (
               <>
@@ -206,6 +212,12 @@ export default function Navbar() {
                   )}
                 </div>
 
+                <MobileLink href="/wishlist" icon={<Heart size={18} />} label="Wishlist"
+                  active={isActive("/wishlist")} onClick={() => setOpen(false)} />
+
+                <MobileLink href="/profile" icon={<User size={18} />} label="Profile"
+                  active={isActive("/profile")} onClick={() => setOpen(false)} />
+
                 <MobileLink
                   href={isAdmin ? "/admin" : "/dashboard"}
                   icon={isAdmin ? <Shield size={18} /> : <LayoutDashboard size={18} />}
@@ -213,10 +225,6 @@ export default function Navbar() {
                   active={isActive(isAdmin ? "/admin" : "/dashboard")}
                   onClick={() => setOpen(false)}
                 />
-                <MobileLink href="/profile" icon={<User size={18} />} label="Profile"
-                  active={isActive("/profile")} onClick={() => setOpen(false)} />
-                <MobileLink href="/wishlist" icon={<Heart size={18} />} label="Wishlist"
-                  active={isActive("/wishlist")} onClick={() => setOpen(false)} />
 
                 <Link
                   href="/subscription"
@@ -232,6 +240,11 @@ export default function Navbar() {
                   {subTier && <SubscriptionBadge tier={subTier} size="sm" />}
                 </Link>
 
+                <MobileLink href="/about" icon={<Info size={18} />} label="About"
+                  active={isActive("/about")} onClick={() => setOpen(false)} />
+                <MobileLink href="/help" icon={<LifeBuoy size={18} />} label="Help & Support"
+                  active={isActive("/help")} onClick={() => setOpen(false)} />
+
                 <div className="border-t border-cream-200 my-2" />
 
                 <form action="/api/auth/logout" method="POST">
@@ -244,13 +257,19 @@ export default function Navbar() {
                 </form>
               </>
             ) : (
-              <Link
-                href="/login"
-                onClick={() => setOpen(false)}
-                className="btn-primary text-sm text-center mt-2 w-full justify-center flex items-center"
-              >
-                Login / Sign Up
-              </Link>
+              <>
+                <MobileLink href="/about" icon={<Info size={18} />} label="About"
+                  active={isActive("/about")} onClick={() => setOpen(false)} />
+                <MobileLink href="/help" icon={<LifeBuoy size={18} />} label="Help & Support"
+                  active={isActive("/help")} onClick={() => setOpen(false)} />
+                <Link
+                  href="/login"
+                  onClick={() => setOpen(false)}
+                  className="btn-primary text-sm text-center mt-2 w-full justify-center flex items-center"
+                >
+                  Login / Sign Up
+                </Link>
+              </>
             )}
           </div>
         </div>
