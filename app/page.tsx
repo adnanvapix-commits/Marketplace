@@ -49,14 +49,14 @@ const CATEGORY_CARDS = [
     name: "Tech Accessories",
     slug: "Electronics",
     desc: "Charging gear, cables, audio peripherals and premium bulk accessories.",
-    image: "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=600&q=80&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1625948515291-69613efd103f?w=600&q=80&auto=format&fit=crop",
     badge: "Fast Moving",
   },
   {
     name: "Packaging & Materials",
     slug: "Packaging",
     desc: "Industrial packaging, custom boxes, protective materials for bulk orders.",
-    image: "https://images.unsplash.com/photo-1605289982774-9a6fef564df8?w=600&q=80&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?w=600&q=80&auto=format&fit=crop",
     badge: "B2B Favourite",
   },
   {
