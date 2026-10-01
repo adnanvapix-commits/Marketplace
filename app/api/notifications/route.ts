@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createPooledAdminClient as createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // GET — fetch notifications for the current user
 export async function GET() {
@@ -34,19 +34,43 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json({ success: true });
 }
 
-// DELETE — permanently delete notifications (user can only delete their own)
+// DELETE — permanently delete notifications
+// Users: can only delete their own (scoped by user_id)
+// Admin: can delete any user's notifications by passing targetUserId
 export async function DELETE(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { ids } = await req.json(); // array of IDs, or "all"
+  const body = await req.json();
+  const { ids, targetUserId } = body;
   if (!ids) return NextResponse.json({ error: "ids required" }, { status: 400 });
 
-  // Always scope to user_id so users can never delete other users' notifications
-  const base = supabase.from("notifications").delete().eq("user_id", user.id);
-  const { error } = Array.isArray(ids) ? await base.in("id", ids) : await base;
+  const db = createAdminClient();
 
+  // Check if caller is admin (for admin deleting any user's notifications)
+  const adminEmail = process.env.ADMIN_EMAIL ?? process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "";
+  const isAdminEmail = user.email === adminEmail;
+
+  let deleteQuery;
+
+  if (isAdminEmail && targetUserId) {
+    // Admin deleting a specific user's notifications by ID
+    deleteQuery = db.from("notifications").delete().eq("user_id", targetUserId);
+    if (Array.isArray(ids)) {
+      deleteQuery = db.from("notifications").delete()
+        .eq("user_id", targetUserId)
+        .in("id", ids);
+    }
+  } else {
+    // Regular user — always scope to own user_id, never allow deleting others
+    const base = supabase.from("notifications").delete().eq("user_id", user.id);
+    const { error } = Array.isArray(ids) ? await base.in("id", ids) : await base;
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true });
+  }
+
+  const { error } = await deleteQuery;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
 }
